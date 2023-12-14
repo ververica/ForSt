@@ -20,8 +20,9 @@ class JniCallbackBase : public ROCKSDB_NAMESPACE::JniCallback {
  protected:
   inline void CheckAndRethrowException(JNIEnv* env) const {
     if (env->ExceptionCheck()) {
+      jthrowable obj = env->ExceptionOccurred();
       env->ExceptionDescribe();
-      env->Throw(env->ExceptionOccurred());
+      env->Throw(obj);
     }
   }
 };
