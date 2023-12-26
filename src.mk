@@ -666,6 +666,7 @@ JNI_NATIVE_SOURCES =                                          \
   java/rocksjni/config_options.cc                             \
   java/rocksjni/export_import_files_metadatajni.cc            \
   java/rocksjni/env.cc                                        \
+  java/rocksjni/env_flink.cc								  \
   java/rocksjni/env_options.cc                                \
   java/rocksjni/event_listener.cc                             \
   java/rocksjni/event_listener_jnicallback.cc                 \

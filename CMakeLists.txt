@@ -1021,7 +1021,8 @@ else()
           env/flink/jclasses.cc
           env/flink/jexception.cc
           env/flink/env_flink.cc
-          env/flink/env_flink_impl.cc)
+          env/flink/env_flink_impl.cc
+          env/flink/JvmUtils.cc)
 endif()
 
 if(USE_FOLLY_LITE)
