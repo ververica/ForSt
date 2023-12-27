@@ -8,6 +8,7 @@
 #include <rocksdb/env.h>
 #include <rocksdb/file_system.h>
 #include <rocksdb/status.h>
+#include "jni.h"
 
 namespace ROCKSDB_NAMESPACE {
 class ObjectLibrary;
@@ -83,8 +84,11 @@ class FlinkFileSystem : public FileSystemWrapper {
   IOStatus IsDirectory(const std::string& /*path*/,
                        const IOOptions& /*options*/, bool* /*is_dir*/,
                        IODebugContext* /*dbg*/) override;
+  Status status();
  private:
   std::string fsname_;
+  jclass file_system_class_;
+  jobject file_system_instance_;
 };
 
 // Returns a `FileSystem` that hashes file contents when naming files, thus

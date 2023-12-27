@@ -18,6 +18,7 @@
 #include "logging/logging.h"
 #include "rocksdb/status.h"
 #include "util/string_util.h"
+#include "JvmUtils.h"
 
 #define HDFS_EXISTS 0
 #define HDFS_DOESNT_EXIST -1
@@ -38,12 +39,62 @@ static Logger* mylog = nullptr;
 }  // namespace
 
 // Finally, the FlinkFileSystem
-  FlinkFileSystem::FlinkFileSystem(const std::shared_ptr<FileSystem>& base, const std::string& fsname)
-  : FileSystemWrapper(base), fsname_(fsname){
+FlinkFileSystem::FlinkFileSystem(const std::shared_ptr<FileSystem>& base, const std::string& fsname)
+  : FileSystemWrapper(base), fsname_(fsname) {
+    JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
+    jclass abstract_file_system_class_ = jniEnv->FindClass("org/apache/flink/core/fs/FileSystem");
+    if (abstract_file_system_class_ == nullptr) {
+      std::cerr << "Cannot find abstract_file_system_class_" << std::endl;
+      return;
+    }
+    jmethodID methodId = jniEnv->GetStaticMethodID(
+        abstract_file_system_class_, "get", "(Ljava/net/URI;)Lorg/apache/flink/core/fs/FileSystem;");
+    if (methodId == nullptr) {
+      std::cerr << "Method get Not Found" << std::endl;
+      return;
+    }
+    jclass uriClass = jniEnv->FindClass("java/net/URI");
+    if (uriClass == nullptr) {
+      std::cerr << "Cannot find uriClass" << std::endl;
+      return;
+    }
+    jmethodID uriCtor = jniEnv->GetMethodID(uriClass, "<init>", "(Ljava/lang/String;)V");
+    if (uriCtor == nullptr) {
+      std::cerr << "URI Constructor Not Found" << std::endl;
+      return;
+    }
+    jstring uriStringArg = jniEnv->NewStringUTF(fsname.c_str());
+    jobject uriInstance = jniEnv->NewObject(uriClass, uriCtor, uriStringArg);
+    if (uriInstance == nullptr) {
+      std::cerr << "Could not create instance of class URI" << std::endl;
+      return;
+    }
+
+    file_system_instance_ = jniEnv->CallStaticObjectMethod(file_system_class_, methodId, uriInstance);
+    if (file_system_instance_ == nullptr) {
+      std::cerr << "Could not call static method get" << std::endl;
+      return;
+    }
+    file_system_class_ = jniEnv->GetObjectClass(file_system_instance_);
+    if (file_system_class_ == nullptr) {
+      std::cerr << "Could not GetObjectClass of file_system_instance_" << std::endl;
+      return;
+    }
+
+    jniEnv->DeleteLocalRef(uriStringArg);
+    jniEnv->DeleteLocalRef(uriInstance);
+    jniEnv->DeleteLocalRef(uriClass);
+    jniEnv->DeleteLocalRef(abstract_file_system_class_);
 }
   
 FlinkFileSystem::~FlinkFileSystem() {
-
+    JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
+    if (file_system_instance_ != nullptr) {
+      jniEnv->DeleteLocalRef(file_system_instance_);
+    }
+    if (file_system_class_ != nullptr) {
+      jniEnv->DeleteLocalRef(file_system_class_);
+    }
 }
   
 std::string FlinkFileSystem::GetId() const {
@@ -56,7 +107,14 @@ std::string FlinkFileSystem::GetId() const {
     return id.append("default:0").append(fsname_);
   }
 }
-  
+
+Status FlinkFileSystem::status() {
+  if (file_system_class_ == nullptr || file_system_instance_ == nullptr) {
+    return Status::IOError();
+  }
+  return Status::OK();
+}
+
 Status FlinkFileSystem::ValidateOptions(const DBOptions& db_opts,
                                        const ColumnFamilyOptions& cf_opts) const {
     return Status::OK();
@@ -96,7 +154,44 @@ IOStatus FlinkFileSystem::NewDirectory(const std::string& name,
 IOStatus FlinkFileSystem::FileExists(const std::string& fname,
                                         const IOOptions& /*options*/,
                                         IODebugContext* /*dbg*/) {
-  return IOStatus::OK();
+  JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
+  jmethodID existsMethodId = jniEnv->GetMethodID(
+      file_system_class_, "exists", "(Lorg/apache/flink/core/fs/Path;)Z");
+  if (existsMethodId == nullptr) {
+    std::cerr << "Method exists not found!" << std::endl;
+    return IOStatus::IOError();
+  }
+
+  jclass pathClass = jniEnv->FindClass("org/apache/flink/core/fs/Path");
+  if (pathClass == nullptr) {
+    std::cerr << "Class " << "org/apache/flink/core/fs/Path not found!" << std::endl;
+    return IOStatus::IOError();
+  }
+
+  jmethodID getMethodID = jniEnv->GetMethodID(pathClass, "<init>", "(Ljava/lang/String;)V");
+  if (getMethodID == nullptr) {
+    std::cerr << "No default constructor found for class Path" << std::endl;
+    return IOStatus::IOError();
+  }
+
+  jstring pathString = jniEnv->NewStringUTF(fname.c_str());
+  jobject pathInstance = jniEnv->NewObject(pathClass, getMethodID, pathString);
+  if (pathInstance == nullptr) {
+    std::cerr << "Could not create instance of class Path" << std::endl;
+    return IOStatus::IOError();
+  }
+
+  jboolean exists = jniEnv->CallBooleanMethod(
+      file_system_instance_, existsMethodId, pathInstance);
+  if (jniEnv->ExceptionCheck()) {
+    jniEnv->ExceptionDescribe();
+    jniEnv->ExceptionClear();
+  }
+
+  jniEnv->DeleteLocalRef(pathClass);
+  jniEnv->DeleteLocalRef(pathString);
+  jniEnv->DeleteLocalRef(pathInstance);
+  return exists == JNI_TRUE ? IOStatus::OK() : IOStatus::NotFound();
 }
 
 IOStatus FlinkFileSystem::GetChildren(const std::string& path,
@@ -188,8 +283,10 @@ IOStatus FlinkFileSystem::IsDirectory(const std::string& path,
 }
 
 Status FlinkFileSystem::Create(const std::shared_ptr<FileSystem>& base, const std::string& uri, std::unique_ptr<FileSystem>* result) {
-  result->reset(new FlinkFileSystem(base, uri));
-  return Status::OK();
+  auto * fileSystem = new FlinkFileSystem(base, uri);
+  fileSystem->status();
+  result->reset(fileSystem);
+  return fileSystem->status();
 }
 }  // namespace ROCKSDB_NAMESPACE
 

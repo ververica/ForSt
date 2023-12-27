@@ -50,6 +50,30 @@ jlong Java_org_rocksdb_FlinkEnv_createFlinkEnv(
 
 /*
  * Class:     org_rocksdb_FlinkEnv
+ * Method:    testFileExits
+ * Signature: (JLjava/lang/String;)Z
+ */
+jboolean Java_org_rocksdb_FlinkEnv_testFileExits
+    (JNIEnv *jniEnv, jclass, jlong jhandle, jstring jpath) {
+    auto *env = reinterpret_cast<ROCKSDB_NAMESPACE::Env *>(jhandle);
+    jboolean has_exception = JNI_FALSE;
+    auto path =
+        ROCKSDB_NAMESPACE::JniUtil::copyStdString(jniEnv, jpath, &has_exception);
+    if (has_exception == JNI_TRUE) {
+      return false;
+    }
+    auto status = env->FileExists(path);
+    if (status.ok()) {
+      return JNI_TRUE;
+    } else if (status.IsNotFound()) {
+      return JNI_FALSE;
+    }
+    ROCKSDB_NAMESPACE::RocksDBExceptionJni::ThrowNew(jniEnv, status);
+    return JNI_FALSE;
+}
+
+/*
+ * Class:     org_rocksdb_FlinkEnv
  * Method:    testLoadClass
  * Signature: (JLjava/lang/String;)J
  */
@@ -69,27 +93,27 @@ void Java_org_rocksdb_FlinkEnv_testLoadClass
       return;
     }
 
-    jmethodID constructor = env->GetMethodID(testClass, "<init>", "()V");
+    jmethodID constructor = jniEnv->GetMethodID(testClass, "<init>", "()V");
     if (constructor == nullptr) {
       std::cerr << "No default constructor found for class " << className << std::endl;
       return;
     }
 
-    jobject obj = env->NewObject(testClass, constructor);
+    jobject obj = jniEnv->NewObject(testClass, constructor);
     if (obj == nullptr) {
       std::cerr << "Could not create instance of class " << className << std::endl;
       return;
     }
 
-    jmethodID midToString = env->GetMethodID(testClass, "toString", "()Ljava/lang/String;");
+    jmethodID midToString = jniEnv->GetMethodID(testClass, "toString", "()Ljava/lang/String;");
     if (midToString == nullptr) {
       std::cerr << "Method toString() not found!" << std::endl;
       return;
     }
 
-    jstring result = static_cast<jstring>(env->CallObjectMethod(obj, midToString));
+    jstring result = static_cast<jstring>(jniEnv->CallObjectMethod(obj, midToString));
 
-    const char* str = env->GetStringUTFChars(result, nullptr);
+    const char* str = jniEnv->GetStringUTFChars(result, nullptr);
     if (str == nullptr) {
       std::cerr << "Out of memory." << std::endl;
       return;

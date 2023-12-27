@@ -26,6 +26,12 @@ public class FlinkEnv extends Env {
     testLoadClass(nativeHandle_, className);
   }
 
+  public boolean testFileExits(final String path) {
+    return testFileExits(nativeHandle_, path);
+  }
+
+  private static native boolean testFileExits(final long handle, final String path);
+
   private static native void testLoadClass(final long handle, final String className);
 
   private static native long createFlinkEnv(final String fsName);
