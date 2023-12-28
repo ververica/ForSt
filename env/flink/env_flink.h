@@ -93,6 +93,13 @@ class FlinkFileSystem : public FileSystemWrapper {
   // cache frequently-used class and method to reduce the cost of JNI
   jclass cached_path_class_;
   jmethodID cached_path_constructor_;
+  jclass cached_file_status_class_;
+
+  IOStatus Delete(const std::string& /*name*/, const IOOptions& /*options*/,
+                     IODebugContext* /*dbg*/, bool /*recursive*/);
+  IOStatus GetFileStatus(const std::string& /*fname*/,
+                       const IOOptions& /*options*/,
+                       IODebugContext* /*dbg*/, jobject* /*fileStatus*/);
 };
 
 // Returns a `FileSystem` that hashes file contents when naming files, thus

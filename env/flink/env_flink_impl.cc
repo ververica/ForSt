@@ -38,6 +38,7 @@ static Logger* mylog = nullptr;
   
 }  // namespace
 
+// TODO: Release all jobjects when exception
 // Finally, the FlinkFileSystem
 FlinkFileSystem::FlinkFileSystem(const std::shared_ptr<FileSystem>& base, const std::string& fsname)
   : FileSystemWrapper(base), fsname_(fsname) {
@@ -106,6 +107,13 @@ FlinkFileSystem::FlinkFileSystem(const std::shared_ptr<FileSystem>& base, const 
       std::cerr << "No default constructor found for class Path" << std::endl;
       return;
     }
+    jclass fileStatusClass = jniEnv->FindClass("org/apache/flink/core/fs/FileStatus");
+    if (fileStatusClass == nullptr) {
+      std::cerr << "Class org/apache/flink/core/fs/FileStatus not found!" << std::endl;
+      return;
+    }
+    cached_file_status_class_ = (jclass)jniEnv->NewGlobalRef(fileStatusClass);
+    jniEnv->DeleteLocalRef(fileStatusClass);
 }
   
 FlinkFileSystem::~FlinkFileSystem() {
@@ -118,6 +126,9 @@ FlinkFileSystem::~FlinkFileSystem() {
     }
     if (cached_path_class_ != nullptr) {
       jniEnv->DeleteGlobalRef(cached_path_class_);
+    }
+    if (cached_file_status_class_ != nullptr) {
+      jniEnv->DeleteGlobalRef(cached_file_status_class_);
     }
 }
   
@@ -206,70 +217,331 @@ IOStatus FlinkFileSystem::FileExists(const std::string& fname,
   return exists == JNI_TRUE ? IOStatus::OK() : IOStatus::NotFound();
 }
 
+// Not Efficient! Should cache some class and method or add more usable methods in FLink FileSystem
 IOStatus FlinkFileSystem::GetChildren(const std::string& path,
                                          const IOOptions& options,
                                          std::vector<std::string>* result, 
                                         IODebugContext* dbg) {
+  if (FileExists(path, options, dbg).IsNotFound()){
+    return IOStatus::PathNotFound("Could not find path: " + path);
+  }
+  JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
+  jmethodID listStatusMethodId = jniEnv->GetMethodID(
+      file_system_class_, "listStatus", "(LLorg/apache/flink/core/fs/Path;)[Lorg/apache/hadoop/fs/FileStatus;");
+  if (listStatusMethodId == nullptr) {
+    std::cerr << "Method listStatusMethodId not found!" << std::endl;
+    return IOStatus::IOError("Method listStatusMethodId not found!");
+  }
+
+  jstring pathString = jniEnv->NewStringUTF(path.c_str());
+  jobject pathInstance = jniEnv->NewObject(cached_path_class_, cached_path_constructor_, pathString);
+  if (pathInstance == nullptr) {
+    std::cerr << "Could not create instance of class Path, path: " << path << std::endl;
+    return IOStatus::IOError("Could not create instance of class Path, path: " + path);
+  }
+
+  auto fileStatusArray = (jobjectArray)jniEnv->CallObjectMethod(
+      file_system_instance_, listStatusMethodId, pathInstance);
+  if (fileStatusArray == nullptr) {
+    std::cerr << "Exception when FileSystem#listStatus(Path f), path: " << path << std::endl;
+    return IOStatus::IOError("Exception when FileSystem.listStatus(Path f), path: " + path);
+  }
+
+  jsize fileStatusArrayLen = jniEnv->GetArrayLength(fileStatusArray);
+  for (jsize i = 0;  i < fileStatusArrayLen; i++) {
+    jobject fileStatusObj = jniEnv->GetObjectArrayElement(fileStatusArray, i);
+
+    if (fileStatusObj == nullptr) {
+      std::cerr << "Exception when GetObjectArrayElement of FileStatus[], path: " << path << std::endl;
+      return IOStatus::IOError("Exception when GetObjectArrayElement of FileStatus[], path: " + path);
+    }
+
+    jmethodID getPathMethodId = jniEnv->GetMethodID(
+        cached_file_status_class_, "getPath", "()Lorg/apache/flink/core/fs/Path;");
+    if (getPathMethodId == nullptr) {
+      std::cerr << "Method getPathMethodId not found!" << std::endl;
+      return IOStatus::IOError("Method getPathMethodId not found!");
+    }
+
+    jobject subPath = jniEnv->CallObjectMethod(fileStatusObj, getPathMethodId);
+    if (subPath == nullptr) {
+      std::cerr << "Exception when FileStatus#GetPath(), parent path: " << path << std::endl;
+      return IOStatus::IOError("Exception when FileStatus#GetPath(), parent path: " + path);
+    }
+
+    jmethodID midToString = jniEnv->GetMethodID(cached_path_class_, "toString", "()Ljava/lang/String;");
+    if (midToString == nullptr) {
+      std::cerr << "Method Path#toString() not found!" << std::endl;
+      return IOStatus::IOError("Method Path#toString() not found!");
+    }
+
+    auto subPathStr = (jstring)jniEnv->CallObjectMethod(subPath, midToString);
+    const char* str = jniEnv->GetStringUTFChars(subPathStr, nullptr);
+    result->emplace_back(str);
+    jniEnv->DeleteLocalRef(fileStatusObj);
+    jniEnv->DeleteLocalRef(subPath);
+    jniEnv->ReleaseStringUTFChars(subPathStr, str);
+    jniEnv->DeleteLocalRef(subPathStr);
+  }
+
+  jniEnv->DeleteLocalRef(pathString);
+  jniEnv->DeleteLocalRef(pathInstance);
+  jniEnv->DeleteLocalRef(fileStatusArray);
   return IOStatus::OK();
 }
+
+IOStatus FlinkFileSystem::DeleteDir(const std::string& name,
+                                    const IOOptions& options,
+                                    IODebugContext* dbg) {
+  return Delete(name, options, dbg, true);
+};
 
 IOStatus FlinkFileSystem::DeleteFile(const std::string& fname,
                                         const IOOptions& options,
                                         IODebugContext* dbg) {
-  return IOStatus::OK();
+  return Delete(fname, options, dbg, false);
+}
+
+IOStatus FlinkFileSystem::Delete(
+    const std::string& name, const IOOptions& options, IODebugContext* dbg, bool recursive) {
+  if (FileExists(name, options, dbg).IsNotFound()){
+    return IOStatus::PathNotFound("Could not find path: " + name);
+  }
+  JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
+  jmethodID deleteMethodId = jniEnv->GetMethodID(
+      file_system_class_, "delete", "(LLorg/apache/flink/core/fs/Path;Z)Z");
+  if (deleteMethodId == nullptr) {
+    std::cerr << "Method delete not found!" << std::endl;
+    return IOStatus::IOError("Method delete not found!");
+  }
+
+  jstring pathString = jniEnv->NewStringUTF(name.c_str());
+  jobject pathInstance = jniEnv->NewObject(cached_path_class_, cached_path_constructor_, pathString);
+  if (pathInstance == nullptr) {
+    std::cerr << "Could not create instance of class Path, path: " << name << std::endl;
+    return IOStatus::IOError("Could not create instance of class Path, path " + name);
+  }
+
+  jboolean created = jniEnv->CallBooleanMethod(
+      file_system_instance_, deleteMethodId, pathInstance, recursive);
+  if (jniEnv->ExceptionCheck()) {
+    jniEnv->ExceptionDescribe();
+    jniEnv->ExceptionClear();
+  }
+
+  jniEnv->DeleteLocalRef(pathString);
+  jniEnv->DeleteLocalRef(pathInstance);
+  return created ? IOStatus::OK() : IOStatus::IOError("Exception when Deleting, path: " + name);
 }
 
 IOStatus FlinkFileSystem::CreateDir(const std::string& name,
-                                       const IOOptions& /*options*/,
-                                       IODebugContext* /*dbg*/) {
-
-  return IOStatus::OK();
+                                       const IOOptions& options,
+                                       IODebugContext* dbg) {
+  IOStatus s = FileExists(name, options, dbg);
+  if (!s.ok()) {
+    return CreateDirIfMissing(name, options, dbg);
+  }
+  return IOStatus::IOError("Dir " + name + " exists");
 }
 
 IOStatus FlinkFileSystem::CreateDirIfMissing(const std::string& name,
                                                 const IOOptions& options,
                                                 IODebugContext* dbg) {
-  IOStatus s = FileExists(name, options, dbg);
-  if (s.IsNotFound()) {
-  //  Not atomic. state might change b/w hdfsExists and CreateDir.
-    s = CreateDir(name, options, dbg);
+  JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
+  jmethodID mkdirMethodId = jniEnv->GetMethodID(
+      file_system_class_, "mkdirs", "(Lorg/apache/flink/core/fs/Path;)Z");
+  if (mkdirMethodId == nullptr) {
+    std::cerr << "Method mkdirs not found!" << std::endl;
+    return IOStatus::IOError("Method mkdirs not found!");
   }
-  return s;
+
+  jstring pathString = jniEnv->NewStringUTF(name.c_str());
+  jobject pathInstance = jniEnv->NewObject(cached_path_class_, cached_path_constructor_, pathString);
+  if (pathInstance == nullptr) {
+    std::cerr << "Could not create instance of class Path, path: " << name << std::endl;
+    return IOStatus::IOError("Could not create instance of class Path, path: " + name);
+  }
+
+  jboolean created = jniEnv->CallBooleanMethod(
+      file_system_instance_, mkdirMethodId, pathInstance);
+  if (jniEnv->ExceptionCheck()) {
+    jniEnv->ExceptionDescribe();
+    jniEnv->ExceptionClear();
+  }
+
+  jniEnv->DeleteLocalRef(pathString);
+  jniEnv->DeleteLocalRef(pathInstance);
+  return created ? IOStatus::OK() : IOStatus::IOError("Exception when CreateDirIfMissing, path: " + name);
 }
-  
-IOStatus FlinkFileSystem::DeleteDir(const std::string& name,
-                                       const IOOptions& options,
-                                       IODebugContext* dbg) {
-  return DeleteFile(name, options, dbg);
-};
 
 IOStatus FlinkFileSystem::GetFileSize(const std::string& fname,
-                                         const IOOptions& /*options*/,
+                                         const IOOptions& options,
                                          uint64_t* size,
-                                         IODebugContext* /*dbg*/) {
+                                         IODebugContext* dbg) {
+  JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
+  jobject* fileStatus;
+  IOStatus status = GetFileStatus(fname, options, dbg, fileStatus);
+  if (!status.ok()) {
+    return status;
+  }
+
+  jmethodID getLenMethodId = jniEnv->GetMethodID(cached_file_status_class_, "getLen", "()J");
+  if (getLenMethodId == nullptr) {
+    std::cerr << "Method getLenMethodId not found!" << std::endl;
+    return IOStatus::IOError("Method getLenMethodId not found!");
+  }
+  jlong fileSize = jniEnv->CallLongMethod(*fileStatus, getLenMethodId);
+
+  if (jniEnv->ExceptionCheck()) {
+    jniEnv->ExceptionDescribe();
+    jniEnv->ExceptionClear();
+    return IOStatus::IOError("Exception when GetFileSize, path: " + fname);
+  }
+
+  jniEnv->DeleteLocalRef(*fileStatus);
+  *size = fileSize;
+  return IOStatus::OK();
+}
+
+// 1. Must guarantee that FileStatus::getPath will not be used!
+// 2. The life cycle of fileStatus is maintained by caller.
+IOStatus FlinkFileSystem::GetFileStatus(
+    const std::string& fname, const IOOptions& options, IODebugContext* dbg, jobject* fileStatus) {
+  if (FileExists(fname, options, dbg).IsNotFound()){
+    return IOStatus::PathNotFound("Could not find path: " + fname);
+  }
+  JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
+  jmethodID getFileStatusMethodId = jniEnv->GetMethodID(
+      file_system_class_, "getFileStatus", "(Lorg/apache/flink/core/fs/Path;)Lorg/apache/hadoop/fs/FileStatus;");
+  if (getFileStatusMethodId == nullptr) {
+    std::cerr << "Method getFileStatusMethodId not found!" << std::endl;
+    return IOStatus::IOError("Method getFileStatusMethodId not found!");
+  }
+
+  jstring pathString = jniEnv->NewStringUTF(fname.c_str());
+  jobject pathInstance = jniEnv->NewObject(cached_path_class_, cached_path_constructor_, pathString);
+  if (pathInstance == nullptr) {
+    std::cerr << "Could not create instance of class Path, path: " << fname << std::endl;
+    return IOStatus::IOError("Could not create instance of class Path, path: " + fname);
+  }
+
+  *fileStatus = jniEnv->CallObjectMethod(
+      file_system_instance_, getFileStatusMethodId, pathInstance);
+  if (jniEnv->ExceptionCheck()) {
+    jniEnv->ExceptionDescribe();
+    jniEnv->ExceptionClear();
+    return IOStatus::IOError("Exception when GetFileStatus, path: " + fname);
+  }
+
+  jniEnv->DeleteLocalRef(pathString);
+  jniEnv->DeleteLocalRef(pathInstance);
   return IOStatus::OK();
 }
 
 IOStatus FlinkFileSystem::GetFileModificationTime(const std::string& fname,
-                                                     const IOOptions& /*options*/,
+                                                     const IOOptions& options,
                                                      uint64_t* time, 
-                                                     IODebugContext* /*dbg*/) {
-  return IOStatus::OK();
+                                                     IODebugContext* dbg) {
+  JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
+  jobject* fileStatus;
+  IOStatus status = GetFileStatus(fname, options, dbg, fileStatus);
+  if (!status.ok()) {
+    return status;
+  }
 
+  jmethodID getModificationTimeMethodId = jniEnv->GetMethodID(cached_file_status_class_, "getModificationTime", "()J");
+  if (getModificationTimeMethodId == nullptr) {
+    std::cerr << "Method getModificationTimeMethodId not found!" << std::endl;
+    return IOStatus::IOError("Method getModificationTimeMethodId not found!");
+  }
+  jlong fileModificationTime = jniEnv->CallLongMethod(*fileStatus, getModificationTimeMethodId);
+
+  if (jniEnv->ExceptionCheck()) {
+    jniEnv->ExceptionDescribe();
+    jniEnv->ExceptionClear();
+    return IOStatus::IOError("Exception when GetFileModificationTime, path: " + fname);
+  }
+
+  jniEnv->DeleteLocalRef(*fileStatus);
+  *time = fileModificationTime;
+  return IOStatus::OK();
 }
 
-// The rename is not atomic. HDFS does not allow a renaming if the
-// target already exists. So, we delete the target before attempting the
-// rename.
+IOStatus FlinkFileSystem::IsDirectory(const std::string& path,
+                                      const IOOptions& options,
+                                      bool* is_dir,
+                                      IODebugContext* dbg) {
+
+  JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
+  jobject* fileStatus;
+  IOStatus status = GetFileStatus(path, options, dbg, fileStatus);
+  if (!status.ok()) {
+    return status;
+  }
+
+  jmethodID isDirMethodId = jniEnv->GetMethodID(cached_file_status_class_, "isDir", "()Z");
+  if (isDirMethodId == nullptr) {
+    std::cerr << "Method isDirMethodId not found!" << std::endl;
+    return IOStatus::IOError("Method isDirMethodId not found!");
+  }
+  jboolean isDir = jniEnv->CallBooleanMethod(*fileStatus, isDirMethodId);
+
+  if (jniEnv->ExceptionCheck()) {
+    jniEnv->ExceptionDescribe();
+    jniEnv->ExceptionClear();
+    return IOStatus::IOError("Exception when IsDirectory, path: " + path);
+  }
+
+  jniEnv->DeleteLocalRef(*fileStatus);
+  *is_dir = isDir;
+  return IOStatus::OK();
+}
+
 IOStatus FlinkFileSystem::RenameFile(const std::string& src, const std::string& target,
                                         const IOOptions& options, IODebugContext* dbg) {
-  return IOStatus::OK();
+  if (FileExists(src, options, dbg).IsNotFound()){
+    return IOStatus::PathNotFound("Could not find src path: " + src);
+  }
+  JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
+  jmethodID renameMethodId = jniEnv->GetMethodID(
+      file_system_class_, "rename", "(Lorg/apache/flink/core/fs/Path;Lorg/apache/flink/core/fs/Path;)Z");
+  if (renameMethodId == nullptr) {
+    std::cerr << "Method renameMethodId not found!" << std::endl;
+    return IOStatus::IOError("Method renameMethodId not found!");
+  }
+
+  jstring srcPathString = jniEnv->NewStringUTF(src.c_str());
+  jobject srcPathInstance = jniEnv->NewObject(cached_path_class_, cached_path_constructor_, srcPathString);
+  if (srcPathInstance == nullptr) {
+    std::cerr << "Could not create instance of class Path, path: " << src << std::endl;
+    return IOStatus::IOError("Could not create instance of class Path, path: " + src);
+  }
+
+  jstring targetPathString = jniEnv->NewStringUTF(target.c_str());
+  jobject targetPathInstance = jniEnv->NewObject(cached_path_class_, cached_path_constructor_, targetPathString);
+  if (targetPathInstance == nullptr) {
+    std::cerr << "Could not create instance of class Path, path: " << target << std::endl;
+    return IOStatus::IOError("Could not create instance of class Path, path: " + target);
+  }
+
+  jboolean renamed = jniEnv->CallBooleanMethod(
+      file_system_instance_, renameMethodId, srcPathInstance, targetPathInstance);
+  if (jniEnv->ExceptionCheck()) {
+    jniEnv->ExceptionDescribe();
+    jniEnv->ExceptionClear();
+    return IOStatus::IOError("Exception when RenameFile, src path: " + src + ", target path: " + target);
+  }
+
+  return renamed ? IOStatus::OK() :
+                 IOStatus::IOError("Exception when RenameFile, src path: " + src + ", target path: " + target);
 }
 
 IOStatus FlinkFileSystem::LockFile(const std::string& /*fname*/,
                                       const IOOptions& /*options*/,
                                       FileLock** lock,
                                       IODebugContext* /*dbg*/) {
+  // There isn't a very good way to atomically check and create a file,
+  // Since it will not influence the usage of Flink, just leave it OK() now;
   *lock = nullptr;
   return IOStatus::OK();
 }
@@ -277,6 +549,8 @@ IOStatus FlinkFileSystem::LockFile(const std::string& /*fname*/,
 IOStatus FlinkFileSystem::UnlockFile(FileLock* /*lock*/,
                                         const IOOptions& /*options*/,
                                         IODebugContext* /*dbg*/) {
+  // There isn't a very good way to atomically check and create a file,
+  // Since it will not influence the usage of Flink, just leave it OK() now;
   return IOStatus::OK();
 }
 
@@ -284,14 +558,6 @@ IOStatus FlinkFileSystem::NewLogger(const std::string& fname,
                                        const IOOptions& /*options*/,
                                        std::shared_ptr<Logger>* result,
                                        IODebugContext* /*dbg*/) {
-  return IOStatus::OK();
-}
-
-IOStatus FlinkFileSystem::IsDirectory(const std::string& path,
-                                         const IOOptions& /*options*/, 
-                                         bool* is_dir,
-                                         IODebugContext* /*dbg*/) {
-                                         
   return IOStatus::OK();
 }
 
