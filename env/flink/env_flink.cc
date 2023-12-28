@@ -40,7 +40,7 @@ int register_FlinkObjects(ObjectLibrary& library, const std::string&) {
   
 }
 #endif // ROCKSDB_LITE
-void hdfs_reg() {
+void flink_reg() {
 #ifndef ROCKSDB_LITE
   auto lib = ObjectRegistry::Default()->AddLibrary("flink");
   register_FlinkObjects(*lib, "flink");

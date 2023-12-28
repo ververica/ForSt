@@ -38,6 +38,23 @@ static Logger* mylog = nullptr;
   
 }  // namespace
 
+// Simple implementation of FSDirectory, Shouldn't influence the normal usage
+class FlinkDirectory : public FSDirectory {
+ public:
+  explicit FlinkDirectory(int fd) : fd_(fd) {}
+  ~FlinkDirectory() {}
+
+  IOStatus Fsync(const IOOptions& /*options*/,
+                 IODebugContext* /*dbg*/) override {
+    return IOStatus::OK();
+  }
+
+  int GetFd() const { return fd_; }
+
+ private:
+  int fd_;
+};
+
 // TODO: Release all jobjects when exception
 // Finally, the FlinkFileSystem
 FlinkFileSystem::FlinkFileSystem(const std::shared_ptr<FileSystem>& base, const std::string& fsname)
@@ -184,7 +201,11 @@ IOStatus FlinkFileSystem::NewDirectory(const std::string& name,
                                           const IOOptions& options,
                                           std::unique_ptr<FSDirectory>* result,
                                           IODebugContext* dbg) {
-  return IOStatus::OK();
+  IOStatus s = FileExists(name, options, dbg);
+  if (s.ok()) {
+    result->reset(new FlinkDirectory(0));
+  }
+  return s;
 }
 
 IOStatus FlinkFileSystem::FileExists(const std::string& fname,
