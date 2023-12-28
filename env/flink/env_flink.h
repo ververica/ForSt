@@ -89,6 +89,10 @@ class FlinkFileSystem : public FileSystemWrapper {
   std::string fsname_;
   jclass file_system_class_;
   jobject file_system_instance_;
+
+  // cache frequently-used class and method to reduce the cost of JNI
+  jclass cached_path_class_;
+  jmethodID cached_path_constructor_;
 };
 
 // Returns a `FileSystem` that hashes file contents when naming files, thus

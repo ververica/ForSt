@@ -42,6 +42,8 @@ static Logger* mylog = nullptr;
 FlinkFileSystem::FlinkFileSystem(const std::shared_ptr<FileSystem>& base, const std::string& fsname)
   : FileSystemWrapper(base), fsname_(fsname) {
     JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
+
+    // Use Flink FileSystem.get(URI uri) to load real FileSystem (e.g. S3FileSystem/OSSFileSystem/...)
     jclass abstract_file_system_class_ = jniEnv->FindClass("org/apache/flink/core/fs/FileSystem");
     if (abstract_file_system_class_ == nullptr) {
       std::cerr << "Cannot find abstract_file_system_class_" << std::endl;
@@ -89,6 +91,21 @@ FlinkFileSystem::FlinkFileSystem(const std::shared_ptr<FileSystem>& base, const 
     jniEnv->DeleteLocalRef(abstract_file_system_class_);
     jniEnv->DeleteLocalRef(fileSystemInstance);
     jniEnv->DeleteLocalRef(fileSystemClass);
+
+    // Construct some frequently-used class and method to reduce the cost of JNI
+    jclass pathClass = jniEnv->FindClass("org/apache/flink/core/fs/Path");
+    if (pathClass == nullptr) {
+      std::cerr << "Class org/apache/flink/core/fs/Path not found!" << std::endl;
+      return;
+    }
+    cached_path_class_ = (jclass)jniEnv->NewGlobalRef(pathClass);
+    jniEnv->DeleteLocalRef(pathClass);
+
+    cached_path_constructor_ = jniEnv->GetMethodID(pathClass, "<init>", "(Ljava/lang/String;)V");
+    if (cached_path_constructor_ == nullptr) {
+      std::cerr << "No default constructor found for class Path" << std::endl;
+      return;
+    }
 }
   
 FlinkFileSystem::~FlinkFileSystem() {
@@ -98,6 +115,9 @@ FlinkFileSystem::~FlinkFileSystem() {
     }
     if (file_system_class_ != nullptr) {
       jniEnv->DeleteGlobalRef(file_system_class_);
+    }
+    if (cached_path_class_ != nullptr) {
+      jniEnv->DeleteGlobalRef(cached_path_class_);
     }
 }
   
@@ -113,7 +133,8 @@ std::string FlinkFileSystem::GetId() const {
 }
 
 Status FlinkFileSystem::status() {
-  if (file_system_class_ == nullptr || file_system_instance_ == nullptr) {
+  if (file_system_class_ == nullptr || file_system_instance_ == nullptr
+      || cached_path_class_ == nullptr || cached_path_constructor_ == nullptr) {
     return Status::IOError();
   }
   return Status::OK();
@@ -163,26 +184,14 @@ IOStatus FlinkFileSystem::FileExists(const std::string& fname,
       file_system_class_, "exists", "(Lorg/apache/flink/core/fs/Path;)Z");
   if (existsMethodId == nullptr) {
     std::cerr << "Method exists not found!" << std::endl;
-    return IOStatus::IOError();
-  }
-
-  jclass pathClass = jniEnv->FindClass("org/apache/flink/core/fs/Path");
-  if (pathClass == nullptr) {
-    std::cerr << "Class " << "org/apache/flink/core/fs/Path not found!" << std::endl;
-    return IOStatus::IOError();
-  }
-
-  jmethodID getMethodID = jniEnv->GetMethodID(pathClass, "<init>", "(Ljava/lang/String;)V");
-  if (getMethodID == nullptr) {
-    std::cerr << "No default constructor found for class Path" << std::endl;
-    return IOStatus::IOError();
+    return IOStatus::IOError("Method exists not found!");
   }
 
   jstring pathString = jniEnv->NewStringUTF(fname.c_str());
-  jobject pathInstance = jniEnv->NewObject(pathClass, getMethodID, pathString);
+  jobject pathInstance = jniEnv->NewObject(cached_path_class_, cached_path_constructor_, pathString);
   if (pathInstance == nullptr) {
     std::cerr << "Could not create instance of class Path" << std::endl;
-    return IOStatus::IOError();
+    return IOStatus::IOError("Could not create instance of class Path");
   }
 
   jboolean exists = jniEnv->CallBooleanMethod(
@@ -192,7 +201,6 @@ IOStatus FlinkFileSystem::FileExists(const std::string& fname,
     jniEnv->ExceptionClear();
   }
 
-  jniEnv->DeleteLocalRef(pathClass);
   jniEnv->DeleteLocalRef(pathString);
   jniEnv->DeleteLocalRef(pathInstance);
   return exists == JNI_TRUE ? IOStatus::OK() : IOStatus::NotFound();
