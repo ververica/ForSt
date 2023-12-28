@@ -70,30 +70,34 @@ FlinkFileSystem::FlinkFileSystem(const std::shared_ptr<FileSystem>& base, const 
       return;
     }
 
-    file_system_instance_ = jniEnv->CallStaticObjectMethod(file_system_class_, methodId, uriInstance);
-    if (file_system_instance_ == nullptr) {
+    jobject fileSystemInstance = jniEnv->CallStaticObjectMethod(file_system_class_, methodId, uriInstance);
+    if (fileSystemInstance == nullptr) {
       std::cerr << "Could not call static method get" << std::endl;
       return;
     }
-    file_system_class_ = jniEnv->GetObjectClass(file_system_instance_);
-    if (file_system_class_ == nullptr) {
+    jclass fileSystemClass = jniEnv->GetObjectClass(file_system_instance_);
+    if (fileSystemClass == nullptr) {
       std::cerr << "Could not GetObjectClass of file_system_instance_" << std::endl;
       return;
     }
+    file_system_instance_ = jniEnv->NewGlobalRef(fileSystemInstance);
+    file_system_class_ = (jclass)jniEnv->NewGlobalRef(fileSystemClass);
 
     jniEnv->DeleteLocalRef(uriStringArg);
     jniEnv->DeleteLocalRef(uriInstance);
     jniEnv->DeleteLocalRef(uriClass);
     jniEnv->DeleteLocalRef(abstract_file_system_class_);
+    jniEnv->DeleteLocalRef(fileSystemInstance);
+    jniEnv->DeleteLocalRef(fileSystemClass);
 }
   
 FlinkFileSystem::~FlinkFileSystem() {
     JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
     if (file_system_instance_ != nullptr) {
-      jniEnv->DeleteLocalRef(file_system_instance_);
+      jniEnv->DeleteGlobalRef(file_system_instance_);
     }
     if (file_system_class_ != nullptr) {
-      jniEnv->DeleteLocalRef(file_system_class_);
+      jniEnv->DeleteGlobalRef(file_system_class_);
     }
 }
   
@@ -210,6 +214,7 @@ IOStatus FlinkFileSystem::DeleteFile(const std::string& fname,
 IOStatus FlinkFileSystem::CreateDir(const std::string& name,
                                        const IOOptions& /*options*/,
                                        IODebugContext* /*dbg*/) {
+
   return IOStatus::OK();
 }
 
