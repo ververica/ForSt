@@ -78,9 +78,6 @@ class FlinkFileSystem : public FileSystemWrapper {
                     FileLock** /*lock*/, IODebugContext* /*dbg*/) override;
   IOStatus UnlockFile(FileLock* /*lock*/, const IOOptions& /*options*/,
                       IODebugContext* /*dbg*/) override;
-  IOStatus NewLogger(const std::string& /*fname*/, const IOOptions& /*options*/,
-                     std::shared_ptr<Logger>* /*result*/,
-                     IODebugContext* /*dbg*/) override;
   IOStatus IsDirectory(const std::string& /*path*/,
                        const IOOptions& /*options*/, bool* /*is_dir*/,
                        IODebugContext* /*dbg*/) override;
