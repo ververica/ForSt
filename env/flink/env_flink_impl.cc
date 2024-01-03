@@ -208,7 +208,7 @@ class FlinkReadableFile : virtual public FSSequentialFile,
   IOStatus Read(size_t n, const IOOptions& /*options*/, Slice* result,
                 char* scratch, IODebugContext* /*dbg*/) override {
      JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
-     jmethodID readMethodId = jniEnv->GetMethodID(fs_data_input_stream_class_, "read", "(Ljava/nio/ByteBuffer;)I");
+     jmethodID readMethodId = jniEnv->GetMethodID(fs_data_input_stream_class_, "readFully", "(Ljava/nio/ByteBuffer;)I");
      if (readMethodId == nullptr) {
         return IOStatus::IOError("Could not find method ByteBufferReadableFSDataInputStream#read");
      }
@@ -230,7 +230,7 @@ class FlinkReadableFile : virtual public FSSequentialFile,
                 Slice* result, char* scratch,
                 IODebugContext* /*dbg*/) const override {
      JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
-     jmethodID readMethodId = jniEnv->GetMethodID(fs_data_input_stream_class_, "read", "(JLjava/nio/ByteBuffer;)I");
+     jmethodID readMethodId = jniEnv->GetMethodID(fs_data_input_stream_class_, "readFully", "(JLjava/nio/ByteBuffer;)I");
      if (readMethodId == nullptr) {
         return IOStatus::IOError("Could not find method ByteBufferReadableFSDataInputStream#read");
      }
