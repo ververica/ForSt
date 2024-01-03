@@ -97,6 +97,7 @@ class FlinkFileSystem : public FileSystemWrapper {
   IOStatus GetFileStatus(const std::string& /*fname*/,
                        const IOOptions& /*options*/,
                        IODebugContext* /*dbg*/, jobject* /*fileStatus*/);
+  std::string ConstructPath(const std::string& /*fname*/);
 };
 
 // Returns a `FileSystem` that hashes file contents when naming files, thus

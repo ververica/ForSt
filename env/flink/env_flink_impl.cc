@@ -395,6 +395,10 @@ Status FlinkFileSystem::ValidateOptions(const DBOptions& db_opts,
                                        const ColumnFamilyOptions& cf_opts) const {
     return Status::OK();
 }
+
+std::string FlinkFileSystem::ConstructPath(const std::string& fname) {
+    return fname.at(0) == '/' ? fsname_ + fname : fsname_ + "/" + fname;
+}
   
 // open a file for sequential reading
 IOStatus FlinkFileSystem::NewSequentialFile(const std::string& fname,
@@ -415,7 +419,7 @@ IOStatus FlinkFileSystem::NewSequentialFile(const std::string& fname,
     }
     auto f = new FlinkReadableFile(
         file_system_instance_, openMethodId,
-        cached_path_class_, cached_path_constructor_, fname);
+        cached_path_class_, cached_path_constructor_, ConstructPath(fname));
     IOStatus valid = f->isValid();
     if (!valid.ok()) {
       delete f;
@@ -444,7 +448,7 @@ IOStatus FlinkFileSystem::NewRandomAccessFile(const std::string& fname,
     }
     auto f = new FlinkReadableFile(
         file_system_instance_, openMethodId,
-        cached_path_class_, cached_path_constructor_, fname);
+        cached_path_class_, cached_path_constructor_, ConstructPath(fname));
     IOStatus valid = f->isValid();
     if (!valid.ok()) {
       delete f;
@@ -469,7 +473,7 @@ IOStatus FlinkFileSystem::NewWritableFile(const std::string& fname,
   }
   auto f = new FlinkWritableFile(
       file_system_instance_, createMethodId,
-      cached_path_class_, cached_path_constructor_, fname, options);
+      cached_path_class_, cached_path_constructor_, ConstructPath(fname), options);
   IOStatus valid = f->isValid();
   if (!valid.ok()) {
     delete f;
@@ -500,10 +504,10 @@ IOStatus FlinkFileSystem::FileExists(const std::string& fname,
     return IOStatus::IOError("Method exists not found!");
   }
 
-  jstring pathString = jniEnv->NewStringUTF(fname.c_str());
+  jstring pathString = jniEnv->NewStringUTF(ConstructPath(fname).c_str());
   jobject pathInstance = jniEnv->NewObject(cached_path_class_, cached_path_constructor_, pathString);
   if (pathInstance == nullptr) {
-    return IOStatus::IOError("Could not create instance of class Path");
+    return IOStatus::IOError("Could not create instance of class Path, path: " + ConstructPath(fname));
   }
 
   jboolean exists = jniEnv->CallBooleanMethod(
@@ -533,10 +537,10 @@ IOStatus FlinkFileSystem::GetChildren(const std::string& path,
     return IOStatus::IOError("Method listStatusMethodId not found!");
   }
 
-  jstring pathString = jniEnv->NewStringUTF(path.c_str());
+  jstring pathString = jniEnv->NewStringUTF(ConstructPath(path).c_str());
   jobject pathInstance = jniEnv->NewObject(cached_path_class_, cached_path_constructor_, pathString);
   if (pathInstance == nullptr) {
-    return IOStatus::IOError("Could not create instance of class Path, path: " + path);
+    return IOStatus::IOError("Could not create instance of class Path, path: " + ConstructPath(path));
   }
 
   auto fileStatusArray = (jobjectArray)jniEnv->CallObjectMethod(
@@ -608,10 +612,10 @@ IOStatus FlinkFileSystem::Delete(
     return IOStatus::IOError("Method delete not found!");
   }
 
-  jstring pathString = jniEnv->NewStringUTF(name.c_str());
+  jstring pathString = jniEnv->NewStringUTF(ConstructPath(name).c_str());
   jobject pathInstance = jniEnv->NewObject(cached_path_class_, cached_path_constructor_, pathString);
   if (pathInstance == nullptr) {
-    return IOStatus::IOError("Could not create instance of class Path, path " + name);
+    return IOStatus::IOError("Could not create instance of class Path, path " + ConstructPath(name));
   }
 
   jboolean created = jniEnv->CallBooleanMethod(
@@ -646,10 +650,10 @@ IOStatus FlinkFileSystem::CreateDirIfMissing(const std::string& name,
     return IOStatus::IOError("Method mkdirs not found!");
   }
 
-  jstring pathString = jniEnv->NewStringUTF(name.c_str());
+  jstring pathString = jniEnv->NewStringUTF(ConstructPath(name).c_str());
   jobject pathInstance = jniEnv->NewObject(cached_path_class_, cached_path_constructor_, pathString);
   if (pathInstance == nullptr) {
-    return IOStatus::IOError("Could not create instance of class Path, path: " + name);
+    return IOStatus::IOError("Could not create instance of class Path, path: " + ConstructPath(name));
   }
 
   jboolean created = jniEnv->CallBooleanMethod(
@@ -706,10 +710,10 @@ IOStatus FlinkFileSystem::GetFileStatus(
     return IOStatus::IOError("Method getFileStatusMethodId not found!");
   }
 
-  jstring pathString = jniEnv->NewStringUTF(fname.c_str());
+  jstring pathString = jniEnv->NewStringUTF(ConstructPath(fname).c_str());
   jobject pathInstance = jniEnv->NewObject(cached_path_class_, cached_path_constructor_, pathString);
   if (pathInstance == nullptr) {
-    return IOStatus::IOError("Could not create instance of class Path, path: " + fname);
+    return IOStatus::IOError("Could not create instance of class Path, path: " + ConstructPath(fname));
   }
 
   *fileStatus = jniEnv->CallObjectMethod(
@@ -794,16 +798,16 @@ IOStatus FlinkFileSystem::RenameFile(const std::string& src, const std::string& 
     return IOStatus::IOError("Method renameMethodId not found!");
   }
 
-  jstring srcPathString = jniEnv->NewStringUTF(src.c_str());
+  jstring srcPathString = jniEnv->NewStringUTF(ConstructPath(src).c_str());
   jobject srcPathInstance = jniEnv->NewObject(cached_path_class_, cached_path_constructor_, srcPathString);
   if (srcPathInstance == nullptr) {
-    return IOStatus::IOError("Could not create instance of class Path, path: " + src);
+    return IOStatus::IOError("Could not create instance of class Path, path: " + ConstructPath(src));
   }
 
-  jstring targetPathString = jniEnv->NewStringUTF(target.c_str());
+  jstring targetPathString = jniEnv->NewStringUTF(ConstructPath(target).c_str());
   jobject targetPathInstance = jniEnv->NewObject(cached_path_class_, cached_path_constructor_, targetPathString);
   if (targetPathInstance == nullptr) {
-    return IOStatus::IOError("Could not create instance of class Path, path: " + target);
+    return IOStatus::IOError("Could not create instance of class Path, path: " + ConstructPath(target));
   }
 
   jboolean renamed = jniEnv->CallBooleanMethod(
