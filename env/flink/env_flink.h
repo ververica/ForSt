@@ -82,6 +82,8 @@ class FlinkFileSystem : public FileSystemWrapper {
                        const IOOptions& /*options*/, bool* /*is_dir*/,
                        IODebugContext* /*dbg*/) override;
   Status status();
+
+  static IOStatus throwJniException(const std::string& /*message*/);
  private:
   std::string fsname_;
   jclass file_system_class_;

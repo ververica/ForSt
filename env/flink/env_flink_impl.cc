@@ -87,13 +87,8 @@ class FlinkWritableFile: public FSWritableFile {
     jobject directByteBuffer = jniEnv->NewDirectByteBuffer((void*)data.data(), data.size());
     jniEnv->CallVoidMethod(fs_data_output_stream_instance_, writeMethodId, directByteBuffer);
 
-    if (jniEnv->ExceptionCheck()) {
-      jniEnv->ExceptionDescribe();
-      jniEnv->ExceptionClear();
-      return IOStatus::IOError("Exception when Appending file, filename: " + filename_);
-    }
     jniEnv->DeleteLocalRef(directByteBuffer);
-    return IOStatus::OK();
+    return FlinkFileSystem::throwJniException("Exception when Appending file, filename: " + filename_);
   }
 
   IOStatus Append(const Slice& data, const IOOptions& options,
@@ -108,12 +103,7 @@ class FlinkWritableFile: public FSWritableFile {
     jmethodID flushMethodId = jniEnv->GetMethodID(fs_data_output_stream_class_, "flush", "()V");
     jniEnv->CallVoidMethod(fs_data_output_stream_instance_, flushMethodId);
 
-    if (jniEnv->ExceptionCheck()) {
-      jniEnv->ExceptionDescribe();
-      jniEnv->ExceptionClear();
-      return IOStatus::IOError("Exception when Flush file, filename: " + filename_);
-    }
-    return IOStatus::OK();
+    return FlinkFileSystem::throwJniException("Exception when Flush file, filename: " + filename_);
   }
 
   IOStatus Sync(const IOOptions& /*options*/,
@@ -122,13 +112,7 @@ class FlinkWritableFile: public FSWritableFile {
     jmethodID syncMethodId = jniEnv->GetMethodID(fs_data_output_stream_class_, "sync", "()V");
     jniEnv->CallVoidMethod(fs_data_output_stream_instance_, syncMethodId);
 
-    if (jniEnv->ExceptionCheck()) {
-      jniEnv->ExceptionDescribe();
-      jniEnv->ExceptionClear();
-      return IOStatus::IOError("Exception when Sync file, filename: " + filename_);
-    }
-
-    return IOStatus::OK();
+    return FlinkFileSystem::throwJniException("Exception when Sync file, filename: " + filename_);
   }
 
 
@@ -138,12 +122,7 @@ class FlinkWritableFile: public FSWritableFile {
     jmethodID closeMethodId = jniEnv->GetMethodID(fs_data_output_stream_class_, "close", "()V");
     jniEnv->CallVoidMethod(fs_data_output_stream_instance_, closeMethodId);
 
-    if (jniEnv->ExceptionCheck()) {
-      jniEnv->ExceptionDescribe();
-      jniEnv->ExceptionClear();
-      return IOStatus::IOError("Exception when Close file, filename: " + filename_);
-    }
-    return IOStatus::OK();
+    return FlinkFileSystem::throwJniException("Exception when Close file, filename: " + filename_);
   }
 };
 
@@ -215,12 +194,13 @@ class FlinkReadableFile : virtual public FSSequentialFile,
      // TODO: check about unsigned long to long
      jobject directByteBuffer = jniEnv->NewDirectByteBuffer((void*)scratch, n);
      jint totalBytesRead = jniEnv->CallIntMethod(fs_data_input_stream_instance_, readMethodId, directByteBuffer);
-     if (jniEnv->ExceptionCheck()) {
-        jniEnv->ExceptionDescribe();
-        jniEnv->ExceptionClear();
-        return IOStatus::IOError("Exception when Reading file, filename: " + filename_);
-     }
+
      jniEnv->DeleteLocalRef(directByteBuffer);
+     IOStatus status = FlinkFileSystem::throwJniException("Exception when Reading file, filename: " + filename_);
+     if (!status.ok()) {
+        return status;
+     }
+
      *result = Slice(scratch, totalBytesRead == -1 ? 0 : totalBytesRead);
      return IOStatus::OK();
   }
@@ -237,12 +217,13 @@ class FlinkReadableFile : virtual public FSSequentialFile,
      // TODO: check about unsigned long to long
      jobject directByteBuffer = jniEnv->NewDirectByteBuffer((void*)scratch, n);
      jint totalBytesRead = jniEnv->CallIntMethod(fs_data_input_stream_instance_, readMethodId, offset, directByteBuffer);
-     if (jniEnv->ExceptionCheck()) {
-        jniEnv->ExceptionDescribe();
-        jniEnv->ExceptionClear();
-        return IOStatus::IOError("Exception when reading file, filename: " + filename_);
-     }
+
      jniEnv->DeleteLocalRef(directByteBuffer);
+     IOStatus status = FlinkFileSystem::throwJniException("Exception when Reading file, filename: " + filename_);
+     if (!status.ok()) {
+        return status;
+     }
+
      *result = Slice(scratch, totalBytesRead == -1 ? 0 : totalBytesRead);
      return IOStatus::OK();
   }
@@ -251,12 +232,8 @@ class FlinkReadableFile : virtual public FSSequentialFile,
      JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
      jmethodID skipMethodId = jniEnv->GetMethodID(fs_data_input_stream_class_, "skip", "(J)J");
      jniEnv->CallVoidMethod(fs_data_input_stream_instance_, skipMethodId, n);
-     if (jniEnv->ExceptionCheck()) {
-        jniEnv->ExceptionDescribe();
-        jniEnv->ExceptionClear();
-        return IOStatus::IOError("Exception when skipping file, filename: " + filename_);
-     }
-     return IOStatus::OK();
+
+     return FlinkFileSystem::throwJniException("Exception when skipping file, filename: " + filename_);
   }
 };
 
@@ -370,6 +347,28 @@ FlinkFileSystem::~FlinkFileSystem() {
     if (cached_file_status_class_ != nullptr) {
       jniEnv->DeleteGlobalRef(cached_file_status_class_);
     }
+}
+
+IOStatus FlinkFileSystem::throwJniException(const std::string& message) {
+    JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
+    if (jniEnv->ExceptionCheck()) {
+      jthrowable throwable = jniEnv->ExceptionOccurred();
+      jniEnv->ExceptionDescribe();
+      jniEnv->ExceptionClear();
+      jniEnv->Throw(throwable);
+
+      jclass throwableClass = jniEnv->FindClass("java/lang/Throwable");
+      jmethodID toStringMethod = jniEnv->GetMethodID(throwableClass, "toString", "()Ljava/lang/String;");
+
+      jstring jmessage = (jstring)jniEnv->CallObjectMethod(throwable, toStringMethod);
+
+      const char* cMessage = jniEnv->GetStringUTFChars(jmessage, nullptr);
+      std::string exceptionMessage(cMessage);
+      jniEnv->ReleaseStringUTFChars(jmessage, cMessage);
+
+      return IOStatus::IOError(message + "\n" + exceptionMessage);
+    }
+    return IOStatus::OK();
 }
   
 std::string FlinkFileSystem::GetId() const {
@@ -512,14 +511,11 @@ IOStatus FlinkFileSystem::FileExists(const std::string& fname,
 
   jboolean exists = jniEnv->CallBooleanMethod(
       file_system_instance_, existsMethodId, pathInstance);
-  if (jniEnv->ExceptionCheck()) {
-    jniEnv->ExceptionDescribe();
-    jniEnv->ExceptionClear();
-  }
-
   jniEnv->DeleteLocalRef(pathString);
   jniEnv->DeleteLocalRef(pathInstance);
-  return exists == JNI_TRUE ? IOStatus::OK() : IOStatus::NotFound();
+  IOStatus status = throwJniException("Exception when FileExists, path: " + fname);
+
+  return exists == JNI_TRUE ? IOStatus::OK() : IOStatus::NotFound(status.ToString());
 }
 
 // TODO: Not Efficient! Should cache some class and method or add more usable methods in FLink FileSystem
@@ -620,14 +616,12 @@ IOStatus FlinkFileSystem::Delete(
 
   jboolean created = jniEnv->CallBooleanMethod(
       file_system_instance_, deleteMethodId, pathInstance, recursive);
-  if (jniEnv->ExceptionCheck()) {
-    jniEnv->ExceptionDescribe();
-    jniEnv->ExceptionClear();
-  }
 
   jniEnv->DeleteLocalRef(pathString);
   jniEnv->DeleteLocalRef(pathInstance);
-  return created ? IOStatus::OK() : IOStatus::IOError("Exception when Deleting, path: " + name);
+  IOStatus status = throwJniException("Exception when Delete, path: " + name);
+
+  return created ? IOStatus::OK() : IOStatus::IOError(status.ToString());
 }
 
 IOStatus FlinkFileSystem::CreateDir(const std::string& name,
@@ -658,14 +652,12 @@ IOStatus FlinkFileSystem::CreateDirIfMissing(const std::string& name,
 
   jboolean created = jniEnv->CallBooleanMethod(
       file_system_instance_, mkdirMethodId, pathInstance);
-  if (jniEnv->ExceptionCheck()) {
-    jniEnv->ExceptionDescribe();
-    jniEnv->ExceptionClear();
-  }
 
   jniEnv->DeleteLocalRef(pathString);
   jniEnv->DeleteLocalRef(pathInstance);
-  return created ? IOStatus::OK() : IOStatus::IOError("Exception when CreateDirIfMissing, path: " + name);
+  IOStatus status = throwJniException("Exception when CreateDirIfMissing, path: " + name);
+
+  return created ? IOStatus::OK() : IOStatus::IOError(status.ToString());
 }
 
 IOStatus FlinkFileSystem::GetFileSize(const std::string& fname,
@@ -685,13 +677,12 @@ IOStatus FlinkFileSystem::GetFileSize(const std::string& fname,
   }
   jlong fileSize = jniEnv->CallLongMethod(fileStatus, getLenMethodId);
 
-  if (jniEnv->ExceptionCheck()) {
-    jniEnv->ExceptionDescribe();
-    jniEnv->ExceptionClear();
-    return IOStatus::IOError("Exception when GetFileSize, path: " + fname);
+  jniEnv->DeleteLocalRef(fileStatus);
+  status = throwJniException("Exception when GetFileSize, path: " + fname);
+  if (!status.ok()) {
+    return status;
   }
 
-  jniEnv->DeleteLocalRef(fileStatus);
   *size = fileSize;
   return IOStatus::OK();
 }
@@ -718,15 +709,10 @@ IOStatus FlinkFileSystem::GetFileStatus(
 
   *fileStatus = jniEnv->CallObjectMethod(
       file_system_instance_, getFileStatusMethodId, pathInstance);
-  if (jniEnv->ExceptionCheck()) {
-    jniEnv->ExceptionDescribe();
-    jniEnv->ExceptionClear();
-    return IOStatus::IOError("Exception when GetFileStatus, path: " + fname);
-  }
 
   jniEnv->DeleteLocalRef(pathString);
   jniEnv->DeleteLocalRef(pathInstance);
-  return IOStatus::OK();
+  return throwJniException("Exception when GetFileStatus, path: " + fname);
 }
 
 IOStatus FlinkFileSystem::GetFileModificationTime(const std::string& fname,
@@ -746,13 +732,12 @@ IOStatus FlinkFileSystem::GetFileModificationTime(const std::string& fname,
   }
   jlong fileModificationTime = jniEnv->CallLongMethod(fileStatus, getModificationTimeMethodId);
 
-  if (jniEnv->ExceptionCheck()) {
-    jniEnv->ExceptionDescribe();
-    jniEnv->ExceptionClear();
-    return IOStatus::IOError("Exception when GetFileModificationTime, path: " + fname);
+  jniEnv->DeleteLocalRef(fileStatus);
+  status = throwJniException("Exception when GetFileModificationTime, path: " + fname);
+  if (!status.ok()) {
+    return status;
   }
 
-  jniEnv->DeleteLocalRef(fileStatus);
   *time = fileModificationTime;
   return IOStatus::OK();
 }
@@ -775,13 +760,12 @@ IOStatus FlinkFileSystem::IsDirectory(const std::string& path,
   }
   jboolean isDir = jniEnv->CallBooleanMethod(fileStatus, isDirMethodId);
 
-  if (jniEnv->ExceptionCheck()) {
-    jniEnv->ExceptionDescribe();
-    jniEnv->ExceptionClear();
-    return IOStatus::IOError("Exception when IsDirectory, path: " + path);
+  jniEnv->DeleteLocalRef(fileStatus);
+  status = throwJniException("Exception when IsDirectory, path: " + path);
+  if (!status.ok()) {
+    return status;
   }
 
-  jniEnv->DeleteLocalRef(fileStatus);
   *is_dir = isDir;
   return IOStatus::OK();
 }
@@ -812,14 +796,10 @@ IOStatus FlinkFileSystem::RenameFile(const std::string& src, const std::string& 
 
   jboolean renamed = jniEnv->CallBooleanMethod(
       file_system_instance_, renameMethodId, srcPathInstance, targetPathInstance);
-  if (jniEnv->ExceptionCheck()) {
-    jniEnv->ExceptionDescribe();
-    jniEnv->ExceptionClear();
-    return IOStatus::IOError("Exception when RenameFile, src path: " + src + ", target path: " + target);
-  }
+  IOStatus status = throwJniException("Exception when RenameFile, src: " + src + ", target: " + target);
 
   return renamed ? IOStatus::OK() :
-                 IOStatus::IOError("Exception when RenameFile, src path: " + src + ", target path: " + target);
+                 IOStatus::IOError(status.ToString());
 }
 
 IOStatus FlinkFileSystem::LockFile(const std::string& /*fname*/,
