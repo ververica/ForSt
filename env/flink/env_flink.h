@@ -103,13 +103,12 @@ class FlinkFileSystem : public FileSystemWrapper {
 };
 
 // Returns a `FileSystem` that hashes file contents when naming files, thus
-// deduping them. RocksDB however expects files to be identified based on a
-// monotonically increasing counter, so a mapping of RocksDB's name to content
-// hash is needed. This mapping is stored in a separate RocksDB instance.
+// deduping them. ForSt however expects files to be identified based on a
+// monotonically increasing counter, so a mapping of ForSt's name to content
+// hash is needed. This mapping is stored in a separate ForSt instance.
 Status NewFlinkEnv(const std::string& fsname, std::unique_ptr<Env>* env);
 Status NewFlinkFileSystem(const std::string& fsname, std::shared_ptr<FileSystem>* fs);
 extern "C" {
 int register_FlinkObjects(ROCKSDB_NAMESPACE::ObjectLibrary& library, const std::string&);
-void hdfs_reg();
 } // extern "C"
 }  // namespace ROCKSDB_NAMESPACE

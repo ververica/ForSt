@@ -14,9 +14,9 @@
 #include "env_flink.h"
 
 //
-// This file defines an HDFS environment for rocksdb. It uses the libhdfs
-// api to access HDFS. All HDFS files created by one instance of rocksdb
-// will reside on the same HDFS cluster.
+// This file defines a Flink environment for ForSt. It uses the JNI call
+// to access Flink FileSystem. All files created by one instance of ForSt
+// will reside on the actual Flink FileSystem.
 //
 namespace ROCKSDB_NAMESPACE {
 
