@@ -1017,9 +1017,6 @@ else()
     env/env_posix.cc
     env/fs_posix.cc
     env/io_posix.cc
-          env/flink/jni_helper.cc
-          env/flink/jclasses.cc
-          env/flink/jexception.cc
           env/flink/env_flink.cc
           env/flink/env_flink_impl.cc
           env/flink/JvmUtils.cc)

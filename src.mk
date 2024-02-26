@@ -101,9 +101,6 @@ LIB_SOURCES =                                                   \
   db/write_thread.cc                                            \
   env/composite_env.cc                                          \
   env/env.cc                                                    \
-  env/flink/jni_helper.cc										\
-  env/flink/jclasses.cc											\
-  env/flink/jexception.cc 										\
   env/flink/env_flink.cc										\
   env/flink/env_flink_impl.cc									\
   env/flink/JvmUtils.cc											\
