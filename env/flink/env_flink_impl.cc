@@ -48,9 +48,9 @@ class FlinkWritableFile: public FSWritableFile {
     }
     fs_data_output_stream_instance_ = jniEnv->NewGlobalRef(fsDataOutputStream);
 
-    jclass fsDataOutputStreamClass = jniEnv->FindClass("org/apache/flink/state/remote/rocksdb/fs/ByteBufferWritableFSDataOutputStream");
+    jclass fsDataOutputStreamClass = jniEnv->FindClass("org/apache/flink/state/forst/fs/ByteBufferWritableFSDataOutputStream");
     if (fsDataOutputStreamClass == nullptr) {
-      std::cerr << "Fail to find class org/apache/flink/state/remote/rocksdb/fs/ByteBufferWritableFSDataOutputStream" << std::endl;
+      std::cerr << "Fail to find class org/apache/flink/state/forst/fs/ByteBufferWritableFSDataOutputStream" << std::endl;
       return;
     }
     fs_data_output_stream_class_ = (jclass)jniEnv->NewGlobalRef(fsDataOutputStreamClass);
@@ -155,9 +155,9 @@ class FlinkReadableFile : virtual public FSSequentialFile,
     }
     fs_data_input_stream_instance_ = jniEnv->NewGlobalRef(fsDataInputStream);
 
-    jclass fsDataInputStreamClass = jniEnv->FindClass("org/apache/flink/state/remote/rocksdb/fs/ByteBufferReadableFSDataInputStream");
+    jclass fsDataInputStreamClass = jniEnv->FindClass("org/apache/flink/state/forst/fs/ByteBufferReadableFSDataInputStream");
     if (fsDataInputStreamClass == nullptr) {
-      std::cerr << "Fail to find class org/apache/flink/state/remote/rocksdb/fs/ByteBufferReadableFSDataInputStream" << std::endl;
+      std::cerr << "Fail to find class org/apache/flink/state/forst/fs/ByteBufferReadableFSDataInputStream" << std::endl;
       return;
     }
     fs_data_input_stream_class_ = (jclass)jniEnv->NewGlobalRef(fsDataInputStreamClass);
@@ -262,7 +262,7 @@ FlinkFileSystem::FlinkFileSystem(const std::shared_ptr<FileSystem>& base, const 
     JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
 
     // Use Flink FileSystem.get(URI uri) to load real FileSystem (e.g. S3FileSystem/OSSFileSystem/...)
-    jclass abstract_file_system_class_ = jniEnv->FindClass("org/apache/flink/state/remote/rocksdb/fs/RemoteRocksdbFlinkFileSystem");
+    jclass abstract_file_system_class_ = jniEnv->FindClass("org/apache/flink/state/forst/fs/ForStFlinkFileSystem");
     if (abstract_file_system_class_ == nullptr) {
       std::cerr << "Cannot find abstract_file_system_class_" << std::endl;
       return;
@@ -412,9 +412,9 @@ IOStatus FlinkFileSystem::NewSequentialFile(const std::string& fname,
     JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
     jmethodID openMethodId = jniEnv->GetMethodID(
         file_system_class_, "open",
-        "(Lorg/apache/flink/core/fs/Path;)Lorg/apache/flink/state/remote/rocksdb/fs/ByteBufferReadableFSDataInputStream;");
+        "(Lorg/apache/flink/core/fs/Path;)Lorg/apache/flink/state/forst/fs/ByteBufferReadableFSDataInputStream;");
     if (openMethodId == nullptr) {
-      return IOStatus::IOError("Method RemoteRocksdbFlinkFileSystem#open(Path f) not found!");
+      return IOStatus::IOError("Method ForStFlinkFileSystem#open(Path f) not found!");
     }
     auto f = new FlinkReadableFile(
         file_system_instance_, openMethodId,
@@ -441,9 +441,9 @@ IOStatus FlinkFileSystem::NewRandomAccessFile(const std::string& fname,
     JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
     jmethodID openMethodId = jniEnv->GetMethodID(
         file_system_class_, "open",
-        "(Lorg/apache/flink/core/fs/Path;)Lorg/apache/flink/state/remote/rocksdb/fs/ByteBufferReadableFSDataInputStream;");
+        "(Lorg/apache/flink/core/fs/Path;)Lorg/apache/flink/state/forst/fs/ByteBufferReadableFSDataInputStream;");
     if (openMethodId == nullptr) {
-      return IOStatus::IOError("Method RemoteRocksdbFlinkFileSystem#open(Path f) not found!");
+      return IOStatus::IOError("Method ForStFlinkFileSystem#open(Path f) not found!");
     }
     auto f = new FlinkReadableFile(
         file_system_instance_, openMethodId,
@@ -466,9 +466,9 @@ IOStatus FlinkFileSystem::NewWritableFile(const std::string& fname,
   JNIEnv* jniEnv = FLINK_NAMESPACE::getJNIEnv();
   jmethodID createMethodId = jniEnv->GetMethodID(
       file_system_class_, "create",
-      "(Lorg/apache/flink/core/fs/Path;)Lorg/apache/flink/state/remote/rocksdb/fs/ByteBufferWritableFSDataOutputStream;");
+      "(Lorg/apache/flink/core/fs/Path;)Lorg/apache/flink/state/forst/fs/ByteBufferWritableFSDataOutputStream;");
   if (createMethodId == nullptr) {
-    return IOStatus::IOError("Method RemoteRocksdbFlinkFileSystem#create(Path f) not found!");
+    return IOStatus::IOError("Method ForStFlinkFileSystem#create(Path f) not found!");
   }
   auto f = new FlinkWritableFile(
       file_system_instance_, createMethodId,
