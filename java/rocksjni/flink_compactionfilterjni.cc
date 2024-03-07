@@ -165,7 +165,6 @@ createListElementFilterFactory(JNIEnv* env, jint ji_list_elem_len,
  */
 jlong Java_org_rocksdb_FlinkCompactionFilter_createNewFlinkCompactionFilterConfigHolder(
     JNIEnv* /* env */, jclass /* jcls */) {
-  using namespace ROCKSDB_NAMESPACE::flink;
   return reinterpret_cast<jlong>(
       new std::shared_ptr<flink::FlinkCompactionFilter::ConfigHolder>(
           new flink::FlinkCompactionFilter::ConfigHolder()));
@@ -178,7 +177,6 @@ jlong Java_org_rocksdb_FlinkCompactionFilter_createNewFlinkCompactionFilterConfi
  */
 void Java_org_rocksdb_FlinkCompactionFilter_disposeFlinkCompactionFilterConfigHolder(
     JNIEnv* /* env */, jclass /* jcls */, jlong handle) {
-  using namespace ROCKSDB_NAMESPACE::flink;
   auto* config_holder = reinterpret_cast<
       std::shared_ptr<flink::FlinkCompactionFilter::ConfigHolder>*>(handle);
   delete config_holder;
@@ -192,7 +190,6 @@ void Java_org_rocksdb_FlinkCompactionFilter_disposeFlinkCompactionFilterConfigHo
 jlong Java_org_rocksdb_FlinkCompactionFilter_createNewFlinkCompactionFilter0(
     JNIEnv* env, jclass /* jcls */, jlong config_holder_handle,
     jobject jtime_provider, jlong logger_handle) {
-  using namespace ROCKSDB_NAMESPACE::flink;
   auto config_holder =
       *(reinterpret_cast<
           std::shared_ptr<flink::FlinkCompactionFilter::ConfigHolder>*>(
