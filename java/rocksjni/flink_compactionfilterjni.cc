@@ -12,7 +12,7 @@
 #include "rocksjni/jnicallback.h"
 #include "utilities/flink/flink_compaction_filter.h"
 
-using namespace ROCKSDB_NAMESPACE::flink;
+namespace flink = ROCKSDB_NAMESPACE::flink;
 
 class JniCallbackBase : public ROCKSDB_NAMESPACE::JniCallback {
  public:
@@ -94,7 +94,7 @@ class JavaListElemenFilterFactory
     assert(m_jcreate_filter_methodid != nullptr);
   }
 
-  FlinkCompactionFilter::ListElementFilter* CreateListElementFilter(
+  flink::FlinkCompactionFilter::ListElementFilter* CreateListElementFilter(
       std::shared_ptr<ROCKSDB_NAMESPACE::Logger> /*logger*/) const override {
     jboolean attached_thread = JNI_FALSE;
     JNIEnv* env = getJniEnv(&attached_thread);
@@ -141,15 +141,15 @@ class JavaTimeProvider
   jmethodID m_jcurrent_timestamp_methodid;
 };
 
-static FlinkCompactionFilter::ListElementFilterFactory*
+static flink::FlinkCompactionFilter::ListElementFilterFactory*
 createListElementFilterFactory(JNIEnv* env, jint ji_list_elem_len,
                                jobject jlist_filter_factory) {
-  FlinkCompactionFilter::ListElementFilterFactory* list_filter_factory =
+  flink::FlinkCompactionFilter::ListElementFilterFactory* list_filter_factory =
       nullptr;
   if (ji_list_elem_len > 0) {
     auto fixed_size = static_cast<std::size_t>(ji_list_elem_len);
     list_filter_factory =
-        new FlinkCompactionFilter::FixedListElementFilterFactory(
+        new flink::FlinkCompactionFilter::FixedListElementFilterFactory(
             fixed_size, static_cast<std::size_t>(0));
   } else if (jlist_filter_factory != nullptr) {
     list_filter_factory =
@@ -167,8 +167,8 @@ jlong Java_org_rocksdb_FlinkCompactionFilter_createNewFlinkCompactionFilterConfi
     JNIEnv* /* env */, jclass /* jcls */) {
   using namespace ROCKSDB_NAMESPACE::flink;
   return reinterpret_cast<jlong>(
-      new std::shared_ptr<FlinkCompactionFilter::ConfigHolder>(
-          new FlinkCompactionFilter::ConfigHolder()));
+      new std::shared_ptr<flink::FlinkCompactionFilter::ConfigHolder>(
+          new flink::FlinkCompactionFilter::ConfigHolder()));
 }
 
 /*
@@ -179,9 +179,8 @@ jlong Java_org_rocksdb_FlinkCompactionFilter_createNewFlinkCompactionFilterConfi
 void Java_org_rocksdb_FlinkCompactionFilter_disposeFlinkCompactionFilterConfigHolder(
     JNIEnv* /* env */, jclass /* jcls */, jlong handle) {
   using namespace ROCKSDB_NAMESPACE::flink;
-  auto* config_holder =
-      reinterpret_cast<std::shared_ptr<FlinkCompactionFilter::ConfigHolder>*>(
-          handle);
+  auto* config_holder = reinterpret_cast<
+      std::shared_ptr<flink::FlinkCompactionFilter::ConfigHolder>*>(handle);
   delete config_holder;
 }
 
@@ -195,7 +194,8 @@ jlong Java_org_rocksdb_FlinkCompactionFilter_createNewFlinkCompactionFilter0(
     jobject jtime_provider, jlong logger_handle) {
   using namespace ROCKSDB_NAMESPACE::flink;
   auto config_holder =
-      *(reinterpret_cast<std::shared_ptr<FlinkCompactionFilter::ConfigHolder>*>(
+      *(reinterpret_cast<
+          std::shared_ptr<flink::FlinkCompactionFilter::ConfigHolder>*>(
           config_holder_handle));
   auto time_provider = new JavaTimeProvider(env, jtime_provider);
   auto logger =
@@ -204,9 +204,10 @@ jlong Java_org_rocksdb_FlinkCompactionFilter_createNewFlinkCompactionFilter0(
           : *(reinterpret_cast<
                 std::shared_ptr<ROCKSDB_NAMESPACE::LoggerJniCallback>*>(
                 logger_handle));
-  return reinterpret_cast<jlong>(new FlinkCompactionFilter(
+  return reinterpret_cast<jlong>(new flink::FlinkCompactionFilter(
       config_holder,
-      std::unique_ptr<FlinkCompactionFilter::TimeProvider>(time_provider),
+      std::unique_ptr<flink::FlinkCompactionFilter::TimeProvider>(
+          time_provider),
       logger));
 }
 
@@ -221,19 +222,20 @@ jboolean Java_org_rocksdb_FlinkCompactionFilter_configureFlinkCompactionFilter(
     jlong jquery_time_after_num_entries, jint ji_list_elem_len,
     jobject jlist_filter_factory) {
   auto state_type =
-      static_cast<FlinkCompactionFilter::StateType>(ji_state_type);
+      static_cast<flink::FlinkCompactionFilter::StateType>(ji_state_type);
   auto timestamp_offset = static_cast<size_t>(ji_timestamp_offset);
   auto ttl = static_cast<int64_t>(jl_ttl_milli);
   auto query_time_after_num_entries =
       static_cast<int64_t>(jquery_time_after_num_entries);
   auto config_holder =
-      *(reinterpret_cast<std::shared_ptr<FlinkCompactionFilter::ConfigHolder>*>(
+      *(reinterpret_cast<
+          std::shared_ptr<flink::FlinkCompactionFilter::ConfigHolder>*>(
           handle));
   auto list_filter_factory = createListElementFilterFactory(
       env, ji_list_elem_len, jlist_filter_factory);
-  auto config = new FlinkCompactionFilter::Config{
+  auto config = new flink::FlinkCompactionFilter::Config{
       state_type, timestamp_offset, ttl, query_time_after_num_entries,
-      std::unique_ptr<FlinkCompactionFilter::ListElementFilterFactory>(
+      std::unique_ptr<flink::FlinkCompactionFilter::ListElementFilterFactory>(
           list_filter_factory)};
   return static_cast<jboolean>(config_holder->Configure(config));
 }
