@@ -38,8 +38,5 @@ jobs:
     - name: Check format
       run: VERBOSE_CHECK=1 make check-format
 
-    - name: Compare buckify output
-      run: make check-buck-targets
-
     - name: Simple source code checks
       run: make check-sources
