@@ -1017,7 +1017,8 @@ else()
     env/env_posix.cc
     env/fs_posix.cc
     env/io_posix.cc
-    env/flink/env_flink.cc)
+    env/flink/env_flink.cc
+    env/flink/jvm_util.cc)
 endif()
 
 if(USE_FOLLY_LITE)
@@ -1151,6 +1152,10 @@ endif()
 if(WITH_JNI OR JNI)
   message(STATUS "JNI library is enabled")
   add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/java)
+  include_directories(${JNI_INCLUDE_DIRS})
+  if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    include_directories(${JNI_INCLUDE_DIRS}/linux)
+  endif ()
 else()
   message(STATUS "JNI library is disabled")
 endif()
