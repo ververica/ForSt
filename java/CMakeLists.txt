@@ -30,6 +30,7 @@ set(JNI_NATIVE_SOURCES
         rocksjni/concurrent_task_limiter.cc
         rocksjni/config_options.cc
         rocksjni/env.cc
+        rocksjni/env_flink.cc
         rocksjni/env_options.cc
         rocksjni/event_listener.cc
         rocksjni/event_listener_jnicallback.cc

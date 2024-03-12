@@ -855,4 +855,25 @@ Status FlinkFileSystem::Create(const std::shared_ptr<FileSystem>& base,
   result->reset(fileSystem);
   return status;
 }
+
+Status NewFlinkEnv(const std::string& uri,
+                   std::unique_ptr<Env>* flinkFileSystem) {
+  std::shared_ptr<FileSystem> fs;
+  Status s = NewFlinkFileSystem(uri, &fs);
+  if (s.ok()) {
+    *flinkFileSystem = NewCompositeEnv(fs);
+  }
+  return s;
+}
+
+Status NewFlinkFileSystem(const std::string& uri,
+                          std::shared_ptr<FileSystem>* fs) {
+  std::unique_ptr<FileSystem> flinkFileSystem;
+  Status s =
+      FlinkFileSystem::Create(FileSystem::Default(), uri, &flinkFileSystem);
+  if (s.ok()) {
+    fs->reset(flinkFileSystem.release());
+  }
+  return s;
+}
 }  // namespace ROCKSDB_NAMESPACE
