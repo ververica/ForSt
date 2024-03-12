@@ -1,0 +1,107 @@
+name: ververica/forst/pr-jobs-linux
+on: [push, pull_request]
+jobs:
+  # ======================== Fast Initial Checks ====================== #
+  check-format-and-targets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.1.0
+        with:
+          fetch-depth: 0 # Need full checkout to determine merge base
+          fetch-tags: true
+      - uses: "./.github/actions/setup-upstream"
+      - name: Setup Python
+        uses: actions/setup-python@v5
+      - name: Install Dependencies
+        run: python -m pip install --upgrade pip
+      - name: Install argparse
+        run: pip install argparse
+      - name: Download clang-format-diff.py
+        run: wget https://raw.githubusercontent.com/llvm/llvm-project/release/12.x/clang/tools/clang-format/clang-format-diff.py
+      - name: Check format
+        run: VERBOSE_CHECK=1 make check-format
+      - name: Simple source code checks
+        run: make check-sources
+  # ========================= Linux With Tests ======================== #
+  build-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4.1.0
+      - uses: "./.github/actions/pre-steps"
+      - uses: "./.github/actions/install-gflags"
+      - run: make V=1 J=8 -j8 check
+      - uses: "./.github/actions/post-steps"
+  # ======================== Linux No Test Runs ======================= #
+  build-linux-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4.1.0
+      - uses: "./.github/actions/install-gflags"
+      - run: make V=1 -j32 LIB_MODE=shared release
+      - run: ls librocksdb.so
+      - run: "./db_stress --version"
+      - run: make clean
+      - run: make V=1 -j32 release
+      - run: ls librocksdb.a
+      - run: "./db_stress --version"
+      - run: make clean
+      - run: sudo apt-get remove -y libgflags-dev
+      - run: make V=1 -j32 LIB_MODE=shared release
+      - run: ls librocksdb.so
+      - run: if ./db_stress --version; then false; else true; fi
+      - run: make clean
+      - run: make V=1 -j32 release
+      - run: ls librocksdb.a
+      - run: if ./db_stress --version; then false; else true; fi
+      - uses: "./.github/actions/post-steps"
+  # ============================ Java Jobs ============================ #
+  build-linux-java:
+    runs-on: ubuntu-latest
+    container: evolvedbinary/rocksjava:centos6_x64-be
+    steps:
+      # The docker image is intentionally based on an OS that has an older GLIBC version.
+      # That GLIBC is incompatibile with GitHub's actions/checkout. Thus we implement a manual checkout step.
+      - name: Checkout
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          chown `whoami` . || true
+          git clone --no-checkout https://oath2:$GH_TOKEN@github.com/${{ github.repository }}.git .
+          git -c protocol.version=2 fetch --update-head-ok --no-tags --prune --no-recurse-submodules --depth=1 origin +${{ github.sha }}:${{ github.ref }}
+          git checkout --progress --force ${{ github.ref }}
+          git log -1 --format='%H'
+      - uses: "./.github/actions/pre-steps"
+      - name: Set Java Environment
+        run: |-
+          echo "JAVA_HOME=${JAVA_HOME}"
+          which java && java -version
+          which javac && javac -version
+      - name: Test RocksDBJava
+        run: scl enable devtoolset-7 'make V=1 J=8 -j8 jtest'
+    # NOTE: post-steps skipped because of compatibility issues with docker image
+  build-linux-java-static:
+    runs-on: ubuntu-latest
+    container: evolvedbinary/rocksjava:centos6_x64-be
+    steps:
+      # The docker image is intentionally based on an OS that has an older GLIBC version.
+      # That GLIBC is incompatibile with GitHub's actions/checkout. Thus we implement a manual checkout step.
+      - name: Checkout
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          chown `whoami` . || true
+          git clone --no-checkout https://oath2:$GH_TOKEN@github.com/${{ github.repository }}.git .
+          git -c protocol.version=2 fetch --update-head-ok --no-tags --prune --no-recurse-submodules --depth=1 origin +${{ github.sha }}:${{ github.ref }}
+          git checkout --progress --force ${{ github.ref }}
+          git log -1 --format='%H'
+      - uses: "./.github/actions/pre-steps"
+      - name: Set Java Environment
+        run: |-
+          echo "JAVA_HOME=${JAVA_HOME}"
+          which java && java -version
+          which javac && javac -version
+      - name: Build RocksDBJava Static Library
+        run: scl enable devtoolset-7 'make V=1 J=8 -j8 rocksdbjavastatic'
+    # NOTE: post-steps skipped because of compatibility issues with docker image
