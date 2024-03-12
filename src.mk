@@ -113,6 +113,7 @@ LIB_SOURCES =                                                   \
   env/io_posix.cc                                               \
   env/mock_env.cc                                               \
   env/unique_id_gen.cc                                          \
+  env/flink/env_flink.cc										\
   file/delete_scheduler.cc                                      \
   file/file_prefetch_buffer.cc                                  \
   file/file_util.cc                                             \
