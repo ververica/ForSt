@@ -1021,7 +1021,8 @@ else()
     env/fs_posix.cc
     env/io_posix.cc
     env/flink/env_flink.cc
-    env/flink/jvm_util.cc)
+    env/flink/jvm_util.cc
+    env/flink/jni_helper.cc)
 endif()
 
 if(USE_FOLLY_LITE)
