@@ -113,6 +113,7 @@ LIB_SOURCES =                                                   \
   env/unique_id_gen.cc                                          \
   env/flink/env_flink.cc										\
   env/flink/jvm_util.cc											\
+  env/flink/jni_helper.cc										\
   file/delete_scheduler.cc                                      \
   file/file_prefetch_buffer.cc                                  \
   file/file_util.cc                                             \
