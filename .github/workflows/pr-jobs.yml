@@ -1,4 +1,4 @@
-name: ververica/forst/pr-jobs-linux
+name: ververica/forst/pr-jobs
 on: [push, pull_request]
 jobs:
   # ======================== Fast Initial Checks ====================== #
