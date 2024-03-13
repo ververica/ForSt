@@ -12,9 +12,15 @@ BASH_EXISTS := $(shell which bash)
 SHELL := $(shell which bash)
 include common.mk
 
+MY_JAVA_INCLUDE = -I$(JAVA_HOME)/include/ -I$(JAVA_HOME)/include/linux
+ifneq ("$(wildcard $(JAVA_HOME)/include/darwin)","")
+	MY_JAVA_INCLUDE = -I$(JAVA_HOME)/include -I $(JAVA_HOME)/include/darwin
+endif
+
 CLEAN_FILES = # deliberately empty, so we can append below.
 CFLAGS += ${EXTRA_CFLAGS}
 CXXFLAGS += ${EXTRA_CXXFLAGS}
+CXXFLAGS += ${MY_JAVA_INCLUDE}
 LDFLAGS += $(EXTRA_LDFLAGS)
 MACHINE ?= $(shell uname -m)
 ARFLAGS = ${EXTRA_ARFLAGS} rs

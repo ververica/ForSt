@@ -349,8 +349,6 @@ javalib: java java_test javadocs
 java: java-version
 	$(AM_V_GEN)mkdir -p $(MAIN_CLASSES)
 	$(AM_V_at) $(JAVAC_CMD) $(JAVAC_ARGS) -h $(NATIVE_INCLUDE) -d $(MAIN_CLASSES) $(SOURCES)
-	$(AM_V_at)@cp ../HISTORY.md ./HISTORY-CPP.md
-	$(AM_V_at)@rm -f ./HISTORY-CPP.md
 
 sample: java
 	$(AM_V_GEN)mkdir -p $(SAMPLES_MAIN_CLASSES)
