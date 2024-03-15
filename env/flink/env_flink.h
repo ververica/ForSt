@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "jni_helper.h"
 #include "rocksdb/env.h"
 #include "rocksdb/file_system.h"
 #include "rocksdb/status.h"
@@ -28,16 +29,9 @@ class FlinkFileSystem : public FileSystemWrapper {
   static const char* kNickName() { return "flink"; }
   const char* NickName() const override { return kNickName(); }
 
-  // Constructor and Destructor
-  explicit FlinkFileSystem(const std::shared_ptr<FileSystem>& base,
-                           const std::string& fsname);
   ~FlinkFileSystem() override;
 
   // Several methods current FileSystem must implement
-
-  std::string GetId() const override;
-  Status ValidateOptions(const DBOptions& /*db_opts*/,
-                         const ColumnFamilyOptions& /*cf_opts*/) const override;
   IOStatus NewSequentialFile(const std::string& /*fname*/,
                              const FileOptions& /*options*/,
                              std::unique_ptr<FSSequentialFile>* /*result*/,
@@ -54,14 +48,14 @@ class FlinkFileSystem : public FileSystemWrapper {
                         const IOOptions& /*options*/,
                         std::unique_ptr<FSDirectory>* /*result*/,
                         IODebugContext* /*dbg*/) override;
-  IOStatus FileExists(const std::string& /*fname*/,
+  IOStatus FileExists(const std::string& /*file_name*/,
                       const IOOptions& /*options*/,
                       IODebugContext* /*dbg*/) override;
-  IOStatus GetChildren(const std::string& /*path*/,
+  IOStatus GetChildren(const std::string& /*file_name*/,
                        const IOOptions& /*options*/,
                        std::vector<std::string>* /*result*/,
                        IODebugContext* /*dbg*/) override;
-  IOStatus DeleteFile(const std::string& /*fname*/,
+  IOStatus DeleteFile(const std::string& /*file_name*/,
                       const IOOptions& /*options*/,
                       IODebugContext* /*dbg*/) override;
   IOStatus CreateDir(const std::string& /*name*/, const IOOptions& /*options*/,
@@ -69,9 +63,10 @@ class FlinkFileSystem : public FileSystemWrapper {
   IOStatus CreateDirIfMissing(const std::string& /*name*/,
                               const IOOptions& /*options*/,
                               IODebugContext* /*dbg*/) override;
-  IOStatus DeleteDir(const std::string& /*name*/, const IOOptions& /*options*/,
+  IOStatus DeleteDir(const std::string& /*file_name*/,
+                     const IOOptions& /*options*/,
                      IODebugContext* /*dbg*/) override;
-  IOStatus GetFileSize(const std::string& /*fname*/,
+  IOStatus GetFileSize(const std::string& /*file_name*/,
                        const IOOptions& /*options*/, uint64_t* /*size*/,
                        IODebugContext* /*dbg*/) override;
   IOStatus GetFileModificationTime(const std::string& /*fname*/,
@@ -90,7 +85,23 @@ class FlinkFileSystem : public FileSystemWrapper {
                        IODebugContext* /*dbg*/) override;
 
  private:
-  std::string base_path_;
+  const std::string base_path_;
+  JavaClassCache* class_cache_;
+  jobject file_system_instance_;
+
+  explicit FlinkFileSystem(const std::shared_ptr<FileSystem>& base,
+                           const std::string& fsname);
+
+  // Init FileSystem
+  Status Init();
+
+  IOStatus Delete(const std::string& /*file_name*/,
+                  const IOOptions& /*options*/, IODebugContext* /*dbg*/,
+                  bool /*recursive*/);
+  IOStatus GetFileStatus(const std::string& /*file_name*/,
+                         const IOOptions& /*options*/, IODebugContext* /*dbg*/,
+                         jobject* /*fileStatus*/);
+  std::string ConstructPath(const std::string& /*file_name*/);
 };
 
 // Returns a `FlinkEnv` with base_path
