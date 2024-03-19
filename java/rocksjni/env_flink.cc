@@ -1,10 +1,20 @@
-// Copyright (c) 2011-present, Facebook, Inc.  All rights reserved.
-//  This source code is licensed under both the GPLv2 (found in the
-//  COPYING file in the root directory) and Apache 2.0 License
-//  (found in the LICENSE.Apache file in the root directory).
-//
-// This file implements the "bridge" between Java and C++ and enables
-// calling c++ ROCKSDB_NAMESPACE::Env methods from Java side.
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "env/flink/env_flink.h"
 
@@ -21,17 +31,17 @@
  * Signature: (Ljava/lang/String;)J
  */
 jlong Java_org_rocksdb_FlinkEnv_createFlinkEnv(JNIEnv* env, jclass,
-                                               jstring j_fs_name) {
+                                               jstring base_path) {
   jboolean has_exception = JNI_FALSE;
-  auto fs_name =
-      ROCKSDB_NAMESPACE::JniUtil::copyStdString(env, j_fs_name, &has_exception);
+  auto path =
+      ROCKSDB_NAMESPACE::JniUtil::copyStdString(env, base_path, &has_exception);
   if (has_exception == JNI_TRUE) {
     ROCKSDB_NAMESPACE::RocksDBExceptionJni::ThrowNew(
         env, "Could not copy jstring to std::string");
     return 0;
   }
   std::unique_ptr<ROCKSDB_NAMESPACE::Env> flink_env;
-  auto status = ROCKSDB_NAMESPACE::NewFlinkEnv(fs_name, &flink_env);
+  auto status = ROCKSDB_NAMESPACE::NewFlinkEnv(path, &flink_env);
   if (!status.ok()) {
     ROCKSDB_NAMESPACE::RocksDBExceptionJni::ThrowNew(env, status);
     return 0;

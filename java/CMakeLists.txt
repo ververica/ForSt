@@ -158,6 +158,7 @@ set(JAVA_MAIN_CLASSES
   src/main/java/org/rocksdb/Filter.java
   src/main/java/org/rocksdb/FileOperationInfo.java
   src/main/java/org/rocksdb/FlinkCompactionFilter.java
+  src/main/java/org/rocksdb/FlinkEnv.java
   src/main/java/org/rocksdb/FlushJobInfo.java
   src/main/java/org/rocksdb/FlushReason.java
   src/main/java/org/rocksdb/FlushOptions.java
@@ -460,6 +461,7 @@ if(${CMAKE_VERSION} VERSION_LESS "3.11.4")
           org.rocksdb.EnvOptions
           org.rocksdb.Filter
           org.rocksdb.FlinkCompactionFilter
+          org.rocksdb.FlinkEnv
           org.rocksdb.FlushOptions
           org.rocksdb.HashLinkedListMemTableConfig
           org.rocksdb.HashSkipListMemTableConfig
