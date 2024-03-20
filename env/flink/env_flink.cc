@@ -306,7 +306,7 @@ class FlinkDirectory : public FSDirectory {
 
 FlinkFileSystem::FlinkFileSystem(const std::shared_ptr<FileSystem>& base_fs,
                                  const std::string& base_path)
-    : FileSystemWrapper(base_fs), base_path_(base_path) {}
+    : FileSystemWrapper(base_fs), base_path_(TrimTrailingSlash(base_path)) {}
 
 FlinkFileSystem::~FlinkFileSystem() {
   if (file_system_instance_ != nullptr) {
