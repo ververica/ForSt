@@ -200,6 +200,9 @@ JAVA_TESTS = \
 	org.rocksdb.WriteOptionsTest\
 	org.rocksdb.WriteBatchWithIndexTest
 
+FLINK_TESTS =  \
+    org.rocksdb.flink.FlinkEnvTest
+
 MAIN_SRC = src/main/java
 TEST_SRC = src/test/java
 OUTPUT = target
@@ -292,14 +295,15 @@ PLUGIN_SOURCES = $(foreach root, $(ROCKSDB_PLUGIN_JAVA_ROOTS), $(foreach pkg, or
 CORE_SOURCES = $(foreach pkg, org/rocksdb/util org/rocksdb, $(MAIN_SRC)/$(pkg)/*.java)
 SOURCES = $(wildcard $(CORE_SOURCES) $(PLUGIN_SOURCES))
 PLUGIN_TEST_SOURCES = $(foreach root, $(ROCKSDB_PLUGIN_JAVA_ROOTS), $(foreach pkg, org/rocksdb/test org/rocksdb/util org/rocksdb, $(root)/$(TEST_SRC)/$(pkg)/*.java))
-CORE_TEST_SOURCES = $(foreach pkg, org/rocksdb/test org/rocksdb/util org/rocksdb, $(TEST_SRC)/$(pkg)/*.java)
+CORE_TEST_SOURCES = $(foreach pkg, org/rocksdb/test org/rocksdb/util org/rocksdb/flink org/rocksdb, $(TEST_SRC)/$(pkg)/*.java)
 TEST_SOURCES = $(wildcard $(CORE_TEST_SOURCES) $(PLUGIN_TEST_SOURCES))
+MOCK_FLINK_TEST_SOURCES = $(foreach pkg, org/apache/flink/core/fs  org/apache/flink/state/forst/fs, flinktestmock/src/main/java/$(pkg)/*.java)
 
 # Configure the plugin tests and java classes
 ROCKSDB_PLUGIN_NATIVE_JAVA_CLASSES = $(foreach plugin, $(ROCKSDB_PLUGINS), $(foreach class, $($(plugin)_NATIVE_JAVA_CLASSES), $(class)))
 NATIVE_JAVA_CLASSES = $(NATIVE_JAVA_CLASSES) $(ROCKSDB_PLUGIN_NATIVE_JAVA_CLASSES)
 ROCKSDB_PLUGIN_JAVA_TESTS = $(foreach plugin, $(ROCKSDB_PLUGINS), $(foreach testclass, $($(plugin)_JAVA_TESTS), $(testclass)))
-ALL_JAVA_TESTS = $(JAVA_TESTS) $(ROCKSDB_PLUGIN_JAVA_TESTS)
+ALL_JAVA_TESTS = $(FLINK_TESTS) $(JAVA_TESTS) $(ROCKSDB_PLUGIN_JAVA_TESTS)
 
 # When debugging add -Xcheck:jni to the java args
 ifneq ($(DEBUG_LEVEL),0)
@@ -439,7 +443,7 @@ java_test: java resolve_test_deps
 	$(AM_V_at) $(JAVAC_CMD) $(JAVAC_ARGS) -cp $(MAIN_CLASSES):$(JAVA_TESTCLASSPATH) -h $(NATIVE_INCLUDE) -d $(TEST_CLASSES)\
 		$(TEST_SOURCES)
 
-test: java java_test
+test: java mock_flink_fs java_test
 	$(MAKE) run_test
 
 run_test:
@@ -451,3 +455,13 @@ run_plugin_test:
 db_bench: java
 	$(AM_V_GEN)mkdir -p $(BENCHMARK_MAIN_CLASSES)
 	$(AM_V_at)$(JAVAC_CMD) $(JAVAC_ARGS) -cp $(MAIN_CLASSES) -d $(BENCHMARK_MAIN_CLASSES) $(BENCHMARK_MAIN_SRC)/org/rocksdb/benchmark/*.java
+
+mock_flink_fs:
+	$(AM_V_at) $(JAVAC_CMD) $(JAVAC_ARGS) -cp $(MAIN_CLASSES):$(JAVA_TESTCLASSPATH) -h $(NATIVE_INCLUDE) -d $(TEST_CLASSES) \
+		$(MOCK_FLINK_TEST_SOURCES)
+
+flink_test: java java_test mock_flink_fs
+	$(MAKE) run_flink_test
+
+run_flink_test:
+	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp "$(MAIN_CLASSES):$(TEST_CLASSES):$(JAVA_TESTCLASSPATH):target/*" org.rocksdb.test.RocksJunitRunner $(FLINK_TESTS)

@@ -31,6 +31,7 @@ set(JNI_NATIVE_SOURCES
         rocksjni/config_options.cc
         rocksjni/env.cc
         rocksjni/env_flink.cc
+        rocksjni/env_flink_test_suite.cc
         rocksjni/env_options.cc
         rocksjni/event_listener.cc
         rocksjni/event_listener_jnicallback.cc
@@ -150,6 +151,7 @@ set(JAVA_MAIN_CLASSES
   src/main/java/org/rocksdb/DirectSlice.java
   src/main/java/org/rocksdb/EncodingType.java
   src/main/java/org/rocksdb/Env.java
+  src/main/java/org/rocksdb/EnvFlinkTestSuite.java
   src/main/java/org/rocksdb/EnvOptions.java
   src/main/java/org/rocksdb/EventListener.java
   src/main/java/org/rocksdb/Experimental.java
@@ -458,6 +460,7 @@ if(${CMAKE_VERSION} VERSION_LESS "3.11.4")
           org.rocksdb.DBOptions
           org.rocksdb.DirectSlice
           org.rocksdb.Env
+          org.rocksdb.EnvFlinkTestSuite
           org.rocksdb.EnvOptions
           org.rocksdb.Filter
           org.rocksdb.FlinkCompactionFilter

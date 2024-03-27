@@ -84,13 +84,16 @@ class JavaClassCache {
     jmethodID javaMethod;
     const char* methodName;
     const char* signature;
+    bool isStatic = false;
 
     std::string ToString() const {
       return javaClassAndName.ToString()
           .append(", methodName: ")
           .append(methodName)
           .append(", signature: ")
-          .append(signature);
+          .append(signature)
+          .append(", isStatic:")
+          .append(isStatic ? "true" : "false");
     }
   };
 

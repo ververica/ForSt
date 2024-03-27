@@ -81,7 +81,7 @@ IOStatus JavaClassCache::Init() {
   cached_java_methods_[CachedJavaMethod::JM_FLINK_PATH_CONSTRUCTOR].methodName =
       "<init>";
   cached_java_methods_[CachedJavaMethod::JM_FLINK_PATH_CONSTRUCTOR].signature =
-      "(Lorg/apache/flink/core/fs/Path;)Z";
+      "(Ljava/lang/String;)V";
 
   cached_java_methods_[CachedJavaMethod::JM_FLINK_PATH_TO_STRING]
       .javaClassAndName = cached_java_classes_[JC_FLINK_PATH];
@@ -103,6 +103,8 @@ IOStatus JavaClassCache::Init() {
       "get";
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_GET].signature =
       "(Ljava/net/URI;)Lorg/apache/flink/core/fs/FileSystem;";
+  cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_GET].isStatic =
+      true;
 
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_EXISTS]
       .javaClassAndName = cached_java_classes_[JC_FLINK_FILE_SYSTEM];
@@ -251,9 +253,17 @@ IOStatus JavaClassCache::Init() {
   int numCachedMethods =
       sizeof(cached_java_methods_) / sizeof(JavaMethodContext);
   for (int i = 0; i < numCachedMethods; i++) {
-    cached_java_methods_[i].javaMethod = jni_env_->GetMethodID(
-        cached_java_methods_[i].javaClassAndName.javaClass,
-        cached_java_methods_[i].methodName, cached_java_methods_[i].signature);
+    if (cached_java_methods_[i].isStatic) {
+      cached_java_methods_[i].javaMethod = jni_env_->GetStaticMethodID(
+          cached_java_methods_[i].javaClassAndName.javaClass,
+          cached_java_methods_[i].methodName,
+          cached_java_methods_[i].signature);
+    } else {
+      cached_java_methods_[i].javaMethod = jni_env_->GetMethodID(
+          cached_java_methods_[i].javaClassAndName.javaClass,
+          cached_java_methods_[i].methodName,
+          cached_java_methods_[i].signature);
+    }
 
     if (!cached_java_methods_[i].javaMethod) {
       return IOStatus::IOError(std::string("Exception when GetMethodID, ")
