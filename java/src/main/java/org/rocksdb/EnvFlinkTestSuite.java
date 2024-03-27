@@ -18,6 +18,11 @@
 
 package org.rocksdb;
 
+/**
+ * The test suite used for flink-env interfaces testing. You could define and implement test
+ * procedures in the "env/flink/env_flink_test_suite.h" and "env/flink/env_flink_test_suite.cc", and
+ * these tests will be executed by EnvFlinkTestSuite#runAllTestSuites.
+ */
 public class EnvFlinkTestSuite implements AutoCloseable {
   private final String basePath;
 

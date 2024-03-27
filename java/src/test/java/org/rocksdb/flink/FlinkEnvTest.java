@@ -25,6 +25,9 @@ import org.junit.rules.TemporaryFolder;
 import org.rocksdb.EnvFlinkTestSuite;
 import org.rocksdb.RocksNativeLibraryResource;
 
+/**
+ * Unit test for env/flink/env_flink.cc.
+ */
 public class FlinkEnvTest {
   @ClassRule
   public static final RocksNativeLibraryResource ROCKS_NATIVE_LIBRARY_RESOURCE =
