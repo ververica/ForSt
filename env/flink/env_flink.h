@@ -115,6 +115,14 @@ class FlinkFileSystem : public FileSystemWrapper {
                          const IOOptions& /*options*/, IODebugContext* /*dbg*/,
                          jobject* /*fileStatus*/);
   std::string ConstructPath(const std::string& /*file_name*/);
+
+  static std::string TrimTrailingSlash(const std::string& base_path) {
+    if (!base_path.empty() && base_path.back() == '/') {
+      return base_path.substr(0, base_path.size() - 1);
+    } else {
+      return base_path;
+    }
+  }
 };
 
 // Returns a `FlinkEnv` with base_path
