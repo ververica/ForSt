@@ -116,6 +116,7 @@ LIB_SOURCES =                                                   \
   env/flink/env_flink.cc										\
   env/flink/jvm_util.cc											\
   env/flink/jni_helper.cc										\
+  env/flink/env_flink_test_suite.cc 							\
   file/delete_scheduler.cc                                      \
   file/file_prefetch_buffer.cc                                  \
   file/file_util.cc                                             \
@@ -671,6 +672,7 @@ JNI_NATIVE_SOURCES =                                          \
   java/rocksjni/export_import_files_metadatajni.cc            \
   java/rocksjni/env.cc                                        \
   java/rocksjni/env_flink.cc                                  \
+  java/rocksjni/env_flink_test_suite.cc 					  \
   java/rocksjni/env_options.cc                                \
   java/rocksjni/event_listener.cc                             \
   java/rocksjni/event_listener_jnicallback.cc                 \
