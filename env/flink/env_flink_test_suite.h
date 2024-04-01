@@ -29,6 +29,11 @@ class EnvFlinkTestSuites {
   std::unique_ptr<ROCKSDB_NAMESPACE::Env> flink_env_;
   const std::string base_path_;
   void setUp();
-  void testFileExist();
+  void testDirOperation();
+  void testFileOperation();
+  void testGetChildren();
+  void testFileReadAndWrite();
+
+  void generateFile(const std::string& fileName);
 };
 }  // namespace ROCKSDB_NAMESPACE

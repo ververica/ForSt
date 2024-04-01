@@ -66,7 +66,7 @@ class FlinkWritableFile : public FSWritableFile {
     jobject fsDataOutputStream = jniEnv->CallObjectMethod(
         file_system_instance_, fileSystemCreateMethod.javaMethod, pathInstance);
     jniEnv->DeleteLocalRef(pathInstance);
-    if (fsDataOutputStream == nullptr) {
+    if (fsDataOutputStream == nullptr || jniEnv->ExceptionCheck()) {
       return CheckThenError(
           std::string(
               "CallObjectMethod Exception when Init FlinkWritableFile, ")
@@ -193,7 +193,7 @@ class FlinkReadableFile : virtual public FSSequentialFile,
     jobject fsDataInputStream = jniEnv->CallObjectMethod(
         file_system_instance_, openMethod.javaMethod, pathInstance);
     jniEnv->DeleteLocalRef(pathInstance);
-    if (fsDataInputStream == nullptr) {
+    if (fsDataInputStream == nullptr || jniEnv->ExceptionCheck()) {
       return CheckThenError(
           std::string(
               "CallObjectMethod Exception when Init FlinkReadableFile, ")
@@ -355,7 +355,7 @@ Status FlinkFileSystem::Init() {
   jobject fileSystemInstance = jniEnv->CallStaticObjectMethod(
       fileSystemClass.javaClass, fileSystemGetMethod.javaMethod, uriInstance);
   jniEnv->DeleteLocalRef(uriInstance);
-  if (fileSystemInstance == nullptr) {
+  if (fileSystemInstance == nullptr || jniEnv->ExceptionCheck()) {
     return CheckThenError(
         std::string(
             "CallStaticObjectMethod Exception when Init FlinkFileSystem, ")
@@ -504,7 +504,7 @@ IOStatus FlinkFileSystem::GetChildren(const std::string& file_name,
   auto fileStatusArray = (jobjectArray)jniEnv->CallObjectMethod(
       file_system_instance_, listStatusMethod.javaMethod, pathInstance);
   jniEnv->DeleteLocalRef(pathInstance);
-  if (fileStatusArray == nullptr) {
+  if (fileStatusArray == nullptr || jniEnv->ExceptionCheck()) {
     return CheckThenError(
         std::string("Exception when CallObjectMethod in GetChildren, ")
             .append(listStatusMethod.ToString())
@@ -516,7 +516,7 @@ IOStatus FlinkFileSystem::GetChildren(const std::string& file_name,
   jsize fileStatusArrayLen = jniEnv->GetArrayLength(fileStatusArray);
   for (jsize i = 0; i < fileStatusArrayLen; i++) {
     jobject fileStatusObj = jniEnv->GetObjectArrayElement(fileStatusArray, i);
-    if (fileStatusObj == nullptr) {
+    if (fileStatusObj == nullptr || jniEnv->ExceptionCheck()) {
       jniEnv->DeleteLocalRef(fileStatusArray);
       return CheckThenError(
           "Exception when GetObjectArrayElement in GetChildren");
@@ -527,7 +527,7 @@ IOStatus FlinkFileSystem::GetChildren(const std::string& file_name,
     jobject subPath =
         jniEnv->CallObjectMethod(fileStatusObj, getPathMethod.javaMethod);
     jniEnv->DeleteLocalRef(fileStatusObj);
-    if (subPath == nullptr) {
+    if (subPath == nullptr || jniEnv->ExceptionCheck()) {
       jniEnv->DeleteLocalRef(fileStatusArray);
       return CheckThenError(
           std::string("Exception when CallObjectMethod in GetChildren, ")
@@ -539,6 +539,13 @@ IOStatus FlinkFileSystem::GetChildren(const std::string& file_name,
     auto subPathStr = (jstring)jniEnv->CallObjectMethod(
         subPath, pathToStringMethod.javaMethod);
     jniEnv->DeleteLocalRef(subPath);
+    if (subPathStr == nullptr || jniEnv->ExceptionCheck()) {
+      jniEnv->DeleteLocalRef(fileStatusArray);
+      return CheckThenError(
+          std::string("Exception when CallObjectMethod in GetChildren, ")
+              .append(pathToStringMethod.ToString()));
+    }
+
     const char* str = jniEnv->GetStringUTFChars(subPathStr, nullptr);
     result->emplace_back(str);
     jniEnv->ReleaseStringUTFChars(subPathStr, str);
