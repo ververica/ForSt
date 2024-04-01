@@ -379,7 +379,7 @@ IOStatus FlinkFileSystem::NewSequentialFile(
     const std::string& fname, const FileOptions& options,
     std::unique_ptr<FSSequentialFile>* result, IODebugContext* dbg) {
   result->reset();
-  IOStatus status = FileExists(fname, IOOptions(), dbg);
+  IOStatus status = FileExists(fname, options.io_options, dbg);
   if (!status.ok()) {
     return status;
   }
@@ -400,7 +400,7 @@ IOStatus FlinkFileSystem::NewRandomAccessFile(
     const std::string& fname, const FileOptions& options,
     std::unique_ptr<FSRandomAccessFile>* result, IODebugContext* dbg) {
   result->reset();
-  IOStatus status = FileExists(fname, IOOptions(), dbg);
+  IOStatus status = FileExists(fname, options.io_options, dbg);
   if (!status.ok()) {
     return status;
   }
@@ -623,8 +623,8 @@ IOStatus FlinkFileSystem::CreateDir(const std::string& file_name,
 }
 
 IOStatus FlinkFileSystem::CreateDirIfMissing(const std::string& file_name,
-                                             const IOOptions& options,
-                                             IODebugContext* dbg) {
+                                             const IOOptions& /*options*/,
+                                             IODebugContext* /*dbg*/) {
   JNIEnv* jniEnv = getJNIEnv();
 
   std::string filePath = ConstructPath(file_name);
