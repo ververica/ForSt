@@ -20,7 +20,7 @@
 # fail on errors
 set -e
 
-PREFIX=java/target/frocksdb-release/frocksdbjni-${VERSION}
+PREFIX=java/target/forst-release/forstjni-${VERSION}
 
 function deploy() {
   FILE=$1
@@ -36,8 +36,6 @@ function deploy() {
    -Dgpg.keyname="${KEYNAME}"  \
    -Dgpg.passphrase="${PASSPHRASE}"
 }
-
-PREFIX=java/target/frocksdb-release/frocksdbjni-${VERSION}
 
 deploy ${PREFIX}-sources.jar sources
 deploy ${PREFIX}-javadoc.jar javadoc

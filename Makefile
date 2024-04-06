@@ -6,7 +6,7 @@
 
 #-----------------------------------------------
 
-FROCKSDB_VERSION ?= 1.0
+FORST_VERSION ?= 0.1.0
 
 BASH_EXISTS := $(shell which bash)
 SHELL := $(shell which bash)
@@ -2356,14 +2356,14 @@ rocksdbjavastaticreleasedocker: rocksdbjavastaticosx rocksdbjavastaticdockerx86 
 	cd java/target/classes; $(JAR_CMD) -uf ../$(ROCKSDB_JAR_ALL) org/rocksdb/*.class org/rocksdb/util/*.class
 	openssl sha1 java/target/$(ROCKSDB_JAR_ALL) | sed 's/.*= \([0-9a-f]*\)/\1/' > java/target/$(ROCKSDB_JAR_ALL).sha1
 
-frocksdbjavastaticreleasedocker: rocksdbjavastaticreleasedocker
+forstjavastaticreleasedocker: rocksdbjavastaticreleasedocker
 	# update apache license
 	mkdir -p java/target/META-INF
-	cp LICENSE.Apache java/target/META-INF/LICENSE
+	cp LICENSE java/target/META-INF/LICENSE
 	cd java/target;jar -uf $(ROCKSDB_JAR_ALL) META-INF/LICENSE
 
 	# jars to be released
-	$(eval JAR_PREF=rocksdbjni-$(ROCKSDB_MAJOR).$(ROCKSDB_MINOR).$(ROCKSDB_PATCH))
+	$(eval JAR_PREF=forstjni-$(FORST_VERSION))
 	$(eval JAR_DOCS=$(JAR_PREF)-javadoc.jar)
 	$(eval JAR_SOURCES=$(JAR_PREF)-sources.jar)
 
@@ -2371,21 +2371,22 @@ frocksdbjavastaticreleasedocker: rocksdbjavastaticreleasedocker
 	cd java/target;jar -uf $(JAR_DOCS) META-INF/LICENSE
 	cd java/target;jar -uf $(JAR_SOURCES) META-INF/LICENSE
 
-	# prepare frocksdb release
-	cd java/target;mkdir -p frocksdb-release
+	# prepare forst release
+	cd java/target;mkdir -p forst-release
 
-	$(eval FROCKSDB_JAVA_VERSION=$(ROCKSDB_MAJOR).$(ROCKSDB_MINOR).$(ROCKSDB_PATCH)-ververica-$(FROCKSDB_VERSION))
-	$(eval FJAR_PREF=frocksdbjni-$(FROCKSDB_JAVA_VERSION))
+	$(eval FORST_JAVA_VERSION=$(FORST_VERSION))
+	$(eval FJAR_PREF=forstjni-$(FORST_JAVA_VERSION))
 	$(eval FJAR=$(FJAR_PREF).jar)
 	$(eval FJAR_DOCS=$(FJAR_PREF)-javadoc.jar)
 	$(eval FJAR_SOURCES=$(FJAR_PREF)-sources.jar)
 
-	cd java/target;cp $(ROCKSDB_JAR_ALL) frocksdb-release/$(FJAR)
-	cd java/target;cp $(JAR_DOCS) frocksdb-release/$(FJAR_DOCS)
-	cd java/target;cp $(JAR_SOURCES) frocksdb-release/$(FJAR_SOURCES)
+	cd java/target;cp $(ROCKSDB_JAR_ALL) forst-release/$(FJAR)
+	cd java/target;cp $(JAR_DOCS) forst-release/$(FJAR_DOCS)
+	cd java/target;cp $(JAR_SOURCES) forst-release/$(FJAR_SOURCES)
 	openssl sha1 java/target/$(ROCKSDB_JAR_ALL) | sed 's/.*= \([0-9a-f]*\)/\1/' > java/target/$(ROCKSDB_JAR_ALL).sha1
-	cd java;cat pom.xml.template | sed 's/\$${FROCKSDB_JAVA_VERSION}/$(FROCKSDB_JAVA_VERSION)/' > pom.xml
-	cd java;cp pom.xml target/frocksdb-release/$(FJAR_PREF).pom
+	cd java;cat pom.xml.template | sed 's/\$${FORST_JAVA_VERSION}/$(FORST_JAVA_VERSION)/' > pom.xml
+	cd java;cp pom.xml target/forst-release/$(FJAR_PREF).pom
+
 
 rocksdbjavastaticdockerx86:
 	mkdir -p java/target

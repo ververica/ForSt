@@ -3,11 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.ververica</groupId>
-    <artifactId>frocksdbjni</artifactId>
-    <version>${FROCKSDB_JAVA_VERSION}</version>  <!-- this will be replaced by the Makefile's rocksdbjavageneratepom target -->
+    <artifactId>forstjni</artifactId>
+    <version>${FORST_JAVA_VERSION}</version>  <!-- this will be replaced by the Makefile's rocksdbjavageneratepom target -->
 
-    <name>RocksDB JNI</name>
-    <description>RocksDB fat jar with modifications specific for Apache Flink that contains .so files for linux32 and linux64 (glibc and musl-libc), jnilib files
+    <name>ForSt JNI</name>
+    <description>ForSt fat jar that contains .so files for linux32 and linux64 (glibc and musl-libc), jnilib files
         for Mac OSX, and a .dll for Windows x64.
     </description>
     <url>https://rocksdb.org</url>
@@ -22,36 +22,15 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:https://github.com/ververica/frocksdb.git</connection>
-        <developerConnection>scm:git:https://github.com/ververica/frocksdb.git</developerConnection>
-        <url>scm:git:https://github.com/ververica/frocksdb.git</url>
+        <connection>scm:git:https://github.com/ververica/ForSt.git</connection>
+        <developerConnection>scm:git:https://github.com/ververica/ForSt.git</developerConnection>
+        <url>scm:git:https://github.com/ververica/ForSt.git</url>
     </scm>
 
     <organization>
-        <name>Facebook</name>
-        <url>https://www.facebook.com</url>
+        <name>Ververica</name>
+        <url>https://www.ververica.com</url>
     </organization>
-
-    <developers>
-        <developer>
-            <name>Facebook</name>
-            <email>help@facebook.com</email>
-            <timezone>America/New_York</timezone>
-            <roles>
-                <role>architect</role>
-            </roles>
-        </developer>
-    </developers>
-
-    <mailingLists>
-        <mailingList>
-            <name>rocksdb - Google Groups</name>
-            <subscribe>rocksdb-subscribe@googlegroups.com</subscribe>
-            <unsubscribe>rocksdb-unsubscribe@googlegroups.com</unsubscribe>
-            <post>rocksdb@googlegroups.com</post>
-            <archive>https://groups.google.com/forum/#!forum/rocksdb</archive>
-        </mailingList>
-    </mailingLists>
 
     <properties>
         <project.build.source>1.8</project.build.source>
