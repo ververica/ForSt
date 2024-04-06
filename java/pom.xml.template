@@ -2,12 +2,12 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.rocksdb</groupId>
-    <artifactId>rocksdbjni</artifactId>
-    <version>${ROCKSDB_JAVA_VERSION}</version>  <!-- this will be replaced by the Makefile's rocksdbjavageneratepom target -->
+    <groupId>com.ververica</groupId>
+    <artifactId>forstjni</artifactId>
+    <version>${FORST_JAVA_VERSION}</version>  <!-- this will be replaced by the Makefile's rocksdbjavageneratepom target -->
 
-    <name>RocksDB JNI</name>
-    <description>RocksDB fat jar that contains .so files for linux32 and linux64 (glibc and musl-libc), jnilib files
+    <name>ForSt JNI</name>
+    <description>ForSt fat jar that contains .so files for linux32 and linux64 (glibc and musl-libc), jnilib files
         for Mac OSX, and a .dll for Windows x64.
     </description>
     <url>https://rocksdb.org</url>
@@ -19,17 +19,12 @@
             <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
             <distribution>repo</distribution>
         </license>
-        <license>
-            <name>GNU General Public License, version 2</name>
-            <url>http://www.gnu.org/licenses/gpl-2.0.html</url>
-            <distribution>repo</distribution>
-        </license>
     </licenses>
 
     <scm>
-        <connection>scm:git:https://github.com/facebook/rocksdb.git</connection>
-        <developerConnection>scm:git:https://github.com/facebook/rocksdb.git</developerConnection>
-        <url>scm:git:https://github.com/facebook/rocksdb.git</url>
+        <connection>scm:git:https://github.com/ververica/ForSt.git</connection>
+        <developerConnection>scm:git:https://github.com/ververica/ForSt.git</developerConnection>
+        <url>scm:git:https://github.com/ververica/ForSt.git</url>
     </scm>
 
     <organization>
