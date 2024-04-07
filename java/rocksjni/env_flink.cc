@@ -20,8 +20,7 @@
 
 #include <jni.h>
 
-#include <vector>
-
+#include "include/org_rocksdb_FlinkEnv.h"
 #include "java/rocksjni/portal.h"
 #include "rocksdb/env.h"
 
