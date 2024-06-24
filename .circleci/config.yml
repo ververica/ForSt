@@ -433,6 +433,9 @@ jobs:
   build-linux-cmake-with-folly:
     executor: linux-docker
     resource_class: xlarge
+    environment:
+      CC: gcc-10
+      CXX: g++-10
     steps:
       - pre-steps
       - setup-folly
@@ -443,6 +446,9 @@ jobs:
   build-linux-cmake-with-folly-lite-no-test:
     executor: linux-docker
     resource_class: xlarge
+    environment:
+      CC: gcc-10
+      CXX: g++-10
     steps:
       - pre-steps
       - setup-folly
