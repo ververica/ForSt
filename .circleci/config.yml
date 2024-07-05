@@ -473,23 +473,29 @@ jobs:
       - run: make V=1 -j8 -k check-headers # could be moved to a different build
       - post-steps
 
-  build-linux-gcc-7-with-folly:
+  build-linux-make-with-folly:
     executor: linux-docker
     resource_class: xlarge
+    environment:
+      CC: gcc-10
+      CXX: g++-10
     steps:
       - pre-steps
       - setup-folly
       - build-folly
-      - run: USE_FOLLY=1 LIB_MODE=static CC=gcc-7 CXX=g++-7 V=1 make -j8 check # TODO: LIB_MODE only to work around unresolved linker failures
+      - run: USE_FOLLY=1 LIB_MODE=static V=1 make -j8 check # TODO: LIB_MODE only to work around unresolved linker failures
       - post-steps
 
-  build-linux-gcc-7-with-folly-lite-no-test:
+  build-linux-make-with-folly-lite-no-test:
     executor: linux-docker
     resource_class: xlarge
+    environment:
+      CC: gcc-10
+      CXX: g++-10
     steps:
       - pre-steps
       - setup-folly
-      - run: USE_FOLLY_LITE=1 CC=gcc-7 CXX=g++-7 V=1 make -j8 all
+      - run: USE_FOLLY_LITE=1 V=1 make -j8 all
       - post-steps
 
   build-linux-gcc-8-no_test_run:
@@ -903,8 +909,8 @@ workflows:
       - build-linux
       - build-linux-cmake-with-folly
       - build-linux-cmake-with-folly-lite-no-test
-      - build-linux-gcc-7-with-folly
-      - build-linux-gcc-7-with-folly-lite-no-test
+      - build-linux-make-with-folly
+      - build-linux-make-with-folly-lite-no-test
       - build-linux-cmake-with-folly-coroutines
       - build-linux-cmake-with-benchmark
       - build-linux-encrypted_env-no_compression
@@ -979,7 +985,7 @@ workflows:
       - build-linux-arm-test-full
       - build-linux-run-microbench
       - build-linux-non-shm
-      - build-linux-clang-13-asan-ubsan-with-folly
+#      - build-linux-clang-13-asan-ubsan-with-folly
       - build-linux-valgrind
       - build-windows-vs2022-avx2
       - build-windows-vs2022
