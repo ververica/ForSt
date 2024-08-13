@@ -45,6 +45,7 @@ commands:
             echo "export SNAPPY_DOWNLOAD_BASE=https://rocksdb-deps.s3.us-west-2.amazonaws.com/pkgs/snappy" >> $BASH_ENV
             echo "export LZ4_DOWNLOAD_BASE=https://rocksdb-deps.s3.us-west-2.amazonaws.com/pkgs/lz4" >> $BASH_ENV
             echo "export ZSTD_DOWNLOAD_BASE=https://rocksdb-deps.s3.us-west-2.amazonaws.com/pkgs/zstd" >> $BASH_ENV
+            echo "export DISABLE_PERF_CONTEXT=0" >> $BASH_ENV
 
   windows-build-steps:
     steps:
@@ -361,7 +362,7 @@ jobs:
     resource_class: xlarge
     steps:
       - checkout # check out the code in the project directory
-      - run: CC=clang CXX=clang++ USE_CLANG=1 PORTABLE=1 make V=1 -j16 all
+      - run: CC=clang CXX=clang++ USE_CLANG=1 PORTABLE=1 DISABLE_PERF_CONTEXT=0 make V=1 -j16 all
       - post-steps
 
   build-linux-clang10-asan:
@@ -474,7 +475,7 @@ jobs:
       - run: apt-get update -y && apt-get install -y libgflags-dev
       - run:
           name: "Unity build"
-          command: make V=1 -j8 unity_test
+          command: DISABLE_PERF_CONTEXT=0 make V=1 -j8 unity_test
           no_output_timeout: 20m
       - run: make V=1 -j8 -k check-headers # could be moved to a different build
       - post-steps
