@@ -2282,14 +2282,14 @@ endif
 rocksdbjavastaticosx: rocksdbjavastaticosx_archs
 	cd java; $(JAR_CMD)  -cf target/$(ROCKSDB_JAR) HISTORY*.md
 	cd java/target; $(JAR_CMD) -uf $(ROCKSDB_JAR) librocksdbjni-osx-x86_64.jnilib librocksdbjni-osx-arm64.jnilib
-	cd java/target/classes; $(JAR_CMD) -uf ../$(ROCKSDB_JAR) org/rocksdb/*.class org/rocksdb/util/*.class
+	cd java/target/classes; $(JAR_CMD) -uf ../$(ROCKSDB_JAR) org/forstdb/*.class org/forstdb/util/*.class
 	openssl sha1 java/target/$(ROCKSDB_JAR) | sed 's/.*= \([0-9a-f]*\)/\1/' > java/target/$(ROCKSDB_JAR).sha1
 
 rocksdbjavastaticosx_ub: rocksdbjavastaticosx_archs
 	cd java/target; lipo -create -output librocksdbjni-osx.jnilib librocksdbjni-osx-x86_64.jnilib librocksdbjni-osx-arm64.jnilib
 	cd java; $(JAR_CMD)  -cf target/$(ROCKSDB_JAR) HISTORY*.md
 	cd java/target; $(JAR_CMD) -uf $(ROCKSDB_JAR) librocksdbjni-osx.jnilib
-	cd java/target/classes; $(JAR_CMD) -uf ../$(ROCKSDB_JAR) org/rocksdb/*.class org/rocksdb/util/*.class
+	cd java/target/classes; $(JAR_CMD) -uf ../$(ROCKSDB_JAR) org/forstdb/*.class org/forstdb/util/*.class
 	openssl sha1 java/target/$(ROCKSDB_JAR) | sed 's/.*= \([0-9a-f]*\)/\1/' > java/target/$(ROCKSDB_JAR).sha1
 
 rocksdbjavastaticosx_archs:
@@ -2327,7 +2327,7 @@ rocksdbjavastatic_javalib:
 rocksdbjava_jar:
 	cd java; $(JAR_CMD)  -cf target/$(ROCKSDB_JAR) HISTORY*.md
 	cd java/target; $(JAR_CMD) -uf $(ROCKSDB_JAR) $(ROCKSDBJNILIB)
-	cd java/target/classes; $(JAR_CMD) -uf ../$(ROCKSDB_JAR) org/rocksdb/*.class org/rocksdb/util/*.class
+	cd java/target/classes; $(JAR_CMD) -uf ../$(ROCKSDB_JAR) org/forstdb/*.class org/forstdb/util/*.class
 	openssl sha1 java/target/$(ROCKSDB_JAR) | sed 's/.*= \([0-9a-f]*\)/\1/' > java/target/$(ROCKSDB_JAR).sha1
 
 rocksdbjava_javadocs_jar:
@@ -2346,14 +2346,14 @@ rocksdbjavastaticrelease: rocksdbjavastaticosx rocksdbjava_javadocs_jar rocksdbj
 	cd java/crossbuild && (vagrant destroy -f || true) && vagrant up linux32 && vagrant halt linux32 && vagrant up linux64 && vagrant halt linux64 && vagrant up linux64-musl && vagrant halt linux64-musl
 	cd java; $(JAR_CMD) -cf target/$(ROCKSDB_JAR_ALL) HISTORY*.md
 	cd java/target; $(JAR_CMD) -uf $(ROCKSDB_JAR_ALL) librocksdbjni-*.so librocksdbjni-*.jnilib
-	cd java/target/classes; $(JAR_CMD) -uf ../$(ROCKSDB_JAR_ALL) org/rocksdb/*.class org/rocksdb/util/*.class
+	cd java/target/classes; $(JAR_CMD) -uf ../$(ROCKSDB_JAR_ALL) org/forstdb/*.class org/forstdb/util/*.class
 	openssl sha1 java/target/$(ROCKSDB_JAR_ALL) | sed 's/.*= \([0-9a-f]*\)/\1/' > java/target/$(ROCKSDB_JAR_ALL).sha1
 
 rocksdbjavastaticreleasedocker: rocksdbjavastaticosx rocksdbjavastaticdockerx86 rocksdbjavastaticdockerx86_64 rocksdbjavastaticdockerx86musl rocksdbjavastaticdockerx86_64musl rocksdbjava_javadocs_jar rocksdbjava_sources_jar
 	cd java; $(JAR_CMD) -cf target/$(ROCKSDB_JAR_ALL) HISTORY*.md
 	jar -uf java/target/$(ROCKSDB_JAR_ALL) HISTORY*.md
 	cd java/target; $(JAR_CMD) -uf $(ROCKSDB_JAR_ALL) librocksdbjni-*.so librocksdbjni-*.jnilib librocksdbjni-win64.dll
-	cd java/target/classes; $(JAR_CMD) -uf ../$(ROCKSDB_JAR_ALL) org/rocksdb/*.class org/rocksdb/util/*.class
+	cd java/target/classes; $(JAR_CMD) -uf ../$(ROCKSDB_JAR_ALL) org/forstdb/*.class org/forstdb/util/*.class
 	openssl sha1 java/target/$(ROCKSDB_JAR_ALL) | sed 's/.*= \([0-9a-f]*\)/\1/' > java/target/$(ROCKSDB_JAR_ALL).sha1
 
 forstjavastaticreleasedocker: rocksdbjavastaticreleasedocker
@@ -2467,10 +2467,10 @@ ifeq ($(JAVA_HOME),)
 endif
 	$(AM_V_GEN)cd java; $(MAKE) javalib;
 	$(AM_V_at)rm -f ./java/target/$(ROCKSDBJNILIB)
-	$(AM_V_at)$(CXX) $(CXXFLAGS) -I./java/. -I./java/rocksjni $(JAVA_INCLUDE) $(ROCKSDB_PLUGIN_JNI_CXX_INCLUDEFLAGS) -shared -fPIC -o ./java/target/$(ROCKSDBJNILIB) $(ALL_JNI_NATIVE_SOURCES) $(LIB_OBJECTS) $(JAVA_LDFLAGS) $(COVERAGEFLAGS)
+	$(AM_V_at)$(CXX) $(CXXFLAGS) -I./java/. -I./java/forstjni $(JAVA_INCLUDE) $(ROCKSDB_PLUGIN_JNI_CXX_INCLUDEFLAGS) -shared -fPIC -o ./java/target/$(ROCKSDBJNILIB) $(ALL_JNI_NATIVE_SOURCES) $(LIB_OBJECTS) $(JAVA_LDFLAGS) $(COVERAGEFLAGS)
 	$(AM_V_at)cd java; $(JAR_CMD) -cf target/$(ROCKSDB_JAR) HISTORY*.md
 	$(AM_V_at)cd java/target; $(JAR_CMD) -uf $(ROCKSDB_JAR) $(ROCKSDBJNILIB)
-	$(AM_V_at)cd java/target/classes; $(JAR_CMD) -uf ../$(ROCKSDB_JAR) org/rocksdb/*.class org/rocksdb/util/*.class
+	$(AM_V_at)cd java/target/classes; $(JAR_CMD) -uf ../$(ROCKSDB_JAR) org/forstdb/*.class org/forstdb/util/*.class
 	$(AM_V_at)openssl sha1 java/target/$(ROCKSDB_JAR) | sed 's/.*= \([0-9a-f]*\)/\1/' > java/target/$(ROCKSDB_JAR).sha1
 
 jclean:

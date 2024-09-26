@@ -12,5 +12,5 @@
 
 // Normal logic
 #ifndef ROCKSDB_NAMESPACE
-#define ROCKSDB_NAMESPACE rocksdb
+#define ROCKSDB_NAMESPACE forstdb
 #endif

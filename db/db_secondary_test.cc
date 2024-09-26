@@ -130,7 +130,7 @@ TEST_F(DBSecondaryTest, FailOpenIfLoggerCreationFail) {
   SyncPoint::GetInstance()->DisableProcessing();
   SyncPoint::GetInstance()->ClearAllCallBacks();
   SyncPoint::GetInstance()->SetCallBack(
-      "rocksdb::CreateLoggerFromOptions:AfterGetPath", [&](void* arg) {
+      "forstdb::CreateLoggerFromOptions:AfterGetPath", [&](void* arg) {
         auto* s = reinterpret_cast<Status*>(arg);
         assert(s);
         *s = Status::IOError("Injected");

@@ -4,7 +4,7 @@
  *  COPYING file in the root directory) and Apache 2.0 License
  *  (found in the LICENSE.Apache file in the root directory).
  */
-package org.rocksdb.util;
+package org.forstdb.util;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;

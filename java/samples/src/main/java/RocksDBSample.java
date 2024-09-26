@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 
-import org.rocksdb.*;
-import org.rocksdb.util.SizeUnit;
+import org.forstdb.*;
+import org.forstdb.util.SizeUnit;
 
 public class RocksDBSample {
   static {

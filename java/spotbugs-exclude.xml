@@ -3,136 +3,136 @@
     <!-- The set failing checks when spotbugs was set up were added to this file, as a baseline -->
     <!-- These exclusions should each be justified or removed and fixed AP (2023-02-09) -->
     <Match>
-        <Class name="org.rocksdb.SstFileWriter"/>
+        <Class name="org.forstdb.SstFileWriter"/>
         <Bug pattern="UPM_UNCALLED_PRIVATE_METHOD" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.AbstractTransactionNotifier"/>
+        <Class name="org.forstdb.AbstractTransactionNotifier"/>
         <Bug pattern="UPM_UNCALLED_PRIVATE_METHOD" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.Env"/>
+        <Class name="org.forstdb.Env"/>
         <Bug pattern="MS_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.BackupEngineOptions"/>
+        <Class name="org.forstdb.BackupEngineOptions"/>
         <Bug pattern="EI_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.BackupEngineOptions"/>
+        <Class name="org.forstdb.BackupEngineOptions"/>
         <Bug pattern="EI_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.Transaction$WaitingTransactions"/>
+        <Class name="org.forstdb.Transaction$WaitingTransactions"/>
         <Bug pattern="EI_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.TransactionDB$KeyLockInfo"/>
+        <Class name="org.forstdb.TransactionDB$KeyLockInfo"/>
         <Bug pattern="EI_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.Options"/>
+        <Class name="org.forstdb.Options"/>
         <Bug pattern="EI_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.ColumnFamilyDescriptor"/>
+        <Class name="org.forstdb.ColumnFamilyDescriptor"/>
         <Bug pattern="EI_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.ColumnFamilyOptions"/>
+        <Class name="org.forstdb.ColumnFamilyOptions"/>
         <Bug pattern="EI_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.DBOptions"/>
+        <Class name="org.forstdb.DBOptions"/>
         <Bug pattern="EI_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.EnvOptions"/>
+        <Class name="org.forstdb.EnvOptions"/>
         <Bug pattern="EI_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.LiveFileMetaData"/>
+        <Class name="org.forstdb.LiveFileMetaData"/>
         <Bug pattern="EI_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.SstFileMetaData"/>
+        <Class name="org.forstdb.SstFileMetaData"/>
         <Bug pattern="EI_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.StatsCollectorInput"/>
+        <Class name="org.forstdb.StatsCollectorInput"/>
         <Bug pattern="EI_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.ThreadStatus"/>
+        <Class name="org.forstdb.ThreadStatus"/>
         <Bug pattern="EI_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.ColumnFamilyMetaData"/>
+        <Class name="org.forstdb.ColumnFamilyMetaData"/>
         <Bug pattern="EI_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.TransactionLogIterator$BatchResult"/>
+        <Class name="org.forstdb.TransactionLogIterator$BatchResult"/>
         <Bug pattern="EI_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.WBWIRocksIterator$WriteEntry"/>
+        <Class name="org.forstdb.WBWIRocksIterator$WriteEntry"/>
         <Bug pattern="EI_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.TableProperties"/>
+        <Class name="org.forstdb.TableProperties"/>
         <Bug pattern="EI_EXPOSE_REP" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.WBWIRocksIterator$WriteEntry"/>
+        <Class name="org.forstdb.WBWIRocksIterator$WriteEntry"/>
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.TransactionDB$DeadlockPath"/>
+        <Class name="org.forstdb.TransactionDB$DeadlockPath"/>
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.StatisticsCollector"/>
+        <Class name="org.forstdb.StatisticsCollector"/>
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.ReadOptions"/>
+        <Class name="org.forstdb.ReadOptions"/>
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.Range"/>
+        <Class name="org.forstdb.Range"/>
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.Options"/>
+        <Class name="org.forstdb.Options"/>
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.StatsCollectorInput"/>
+        <Class name="org.forstdb.StatsCollectorInput"/>
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.EnvOptions"/>
+        <Class name="org.forstdb.EnvOptions"/>
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.DBOptions"/>
+        <Class name="org.forstdb.DBOptions"/>
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.ColumnFamilyOptions"/>
+        <Class name="org.forstdb.ColumnFamilyOptions"/>
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.ColumnFamilyDescriptor"/>
+        <Class name="org.forstdb.ColumnFamilyDescriptor"/>
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.BackupEngineOptions"/>
+        <Class name="org.forstdb.BackupEngineOptions"/>
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
     <!-- comment out a single exclusion to test that CI reports the consequent spotbugs [Error]
     <Match>
-        <Class name="org.rocksdb.TransactionDB$KeyLockInfo"/>
+        <Class name="org.forstdb.TransactionDB$KeyLockInfo"/>
         <Bug pattern="EI_EXPOSE_REP2" />
     </Match>
     -->
@@ -146,6 +146,6 @@
         <Bug pattern="DMI_HARDCODED_ABSOLUTE_FILENAME" />
     </Match>
     <Match>
-        <Class name="org.rocksdb.AbstractCompactionFilterFactory" />
+        <Class name="org.forstdb.AbstractCompactionFilterFactory" />
     </Match>
 </FindBugsFilter>

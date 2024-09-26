@@ -4,9 +4,9 @@
  *  COPYING file in the root directory) and Apache 2.0 License
  *  (found in the LICENSE.Apache file in the root directory).
  */
-package org.rocksdb.jmh;
+package org.forstdb.jmh;
 
-import static org.rocksdb.util.KVUtils.ba;
+import static org.forstdb.util.KVUtils.ba;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -17,8 +17,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.openjdk.jmh.annotations.*;
-import org.rocksdb.*;
-import org.rocksdb.util.FileUtils;
+import org.forstdb.*;
+import org.forstdb.util.FileUtils;
 
 @State(Scope.Benchmark)
 public class PutBenchmarks {
