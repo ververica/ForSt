@@ -727,6 +727,10 @@ set(SOURCES
         env/env_encryption.cc
         env/file_system.cc
         env/file_system_tracer.cc
+        env/flink/env_flink.cc
+        env/flink/jvm_util.cc
+        env/flink/jni_helper.cc
+        env/flink/env_flink_test_suite.cc
         env/fs_remap.cc
         env/mock_env.cc
         env/unique_id_gen.cc
@@ -1019,11 +1023,7 @@ else()
     port/port_posix.cc
     env/env_posix.cc
     env/fs_posix.cc
-    env/io_posix.cc
-    env/flink/env_flink.cc
-    env/flink/jvm_util.cc
-    env/flink/jni_helper.cc
-    env/flink/env_flink_test_suite.cc)
+    env/io_posix.cc)
 endif()
 
 if(USE_FOLLY_LITE)
