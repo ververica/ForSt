@@ -14,4 +14,4 @@ cd /rocksdb-local-build
 make clean-not-downloaded
 PORTABLE=1 make -j2 rocksdbjavastatic
 
-cp java/target/librocksdbjni-linux*.so java/target/rocksdbjni-*-linux*.jar java/target/rocksdbjni-*-linux*.jar.sha1 /rocksdb-java-target
+cp java/target/libforstjni-linux*.so java/target/forstjni-*-linux*.jar java/target/forstjni-*-linux*.jar.sha1 /rocksdb-java-target

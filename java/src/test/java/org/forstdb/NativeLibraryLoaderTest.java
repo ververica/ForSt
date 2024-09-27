@@ -25,7 +25,7 @@ public class NativeLibraryLoaderTest {
     NativeLibraryLoader.getInstance().loadLibraryFromJarToTemp(
         temporaryFolder.getRoot().getAbsolutePath());
     final Path path = Paths.get(temporaryFolder.getRoot().getAbsolutePath(),
-        Environment.getJniLibraryFileName("forstdb"));
+        Environment.getJniLibraryFileName("forst"));
     assertThat(Files.exists(path)).isTrue();
     assertThat(Files.isReadable(path)).isTrue();
   }
