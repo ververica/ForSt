@@ -357,32 +357,32 @@ java: java-version
 sample: java
 	$(AM_V_GEN)mkdir -p $(SAMPLES_MAIN_CLASSES)
 	$(AM_V_at)$(JAVAC_CMD) $(JAVAC_ARGS) -cp $(MAIN_CLASSES) -d $(SAMPLES_MAIN_CLASSES) $(SAMPLES_MAIN_SRC)/RocksDBSample.java
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni_not_found
-	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp $(MAIN_CLASSES):$(SAMPLES_MAIN_CLASSES) RocksDBSample /tmp/rocksdbjni
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni_not_found
+	$(AM_V_at)@rm -rf /tmp/forstdbjni
+	$(AM_V_at)@rm -rf /tmp/forstdbjni_not_found
+	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp $(MAIN_CLASSES):$(SAMPLES_MAIN_CLASSES) RocksDBSample /tmp/forstdbjni
+	$(AM_V_at)@rm -rf /tmp/forstdbjni
+	$(AM_V_at)@rm -rf /tmp/forstdbjni_not_found
 
 column_family_sample: java
 	$(AM_V_GEN)mkdir -p $(SAMPLES_MAIN_CLASSES)
 	$(AM_V_at)$(JAVAC_CMD) $(JAVAC_ARGS) -cp $(MAIN_CLASSES) -d $(SAMPLES_MAIN_CLASSES) $(SAMPLES_MAIN_SRC)/RocksDBColumnFamilySample.java
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni
-	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp $(MAIN_CLASSES):$(SAMPLES_MAIN_CLASSES) RocksDBColumnFamilySample /tmp/rocksdbjni
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni
+	$(AM_V_at)@rm -rf /tmp/forstdbjni
+	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp $(MAIN_CLASSES):$(SAMPLES_MAIN_CLASSES) RocksDBColumnFamilySample /tmp/forstdbjni
+	$(AM_V_at)@rm -rf /tmp/forstdbjni
 
 transaction_sample: java
 	$(AM_V_GEN)mkdir -p $(SAMPLES_MAIN_CLASSES)
 	$(AM_V_at)$(JAVAC_CMD) -cp $(MAIN_CLASSES) -d $(SAMPLES_MAIN_CLASSES) $(SAMPLES_MAIN_SRC)/TransactionSample.java
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni
-	$(JAVA_CMD) -ea -Xcheck:jni -Djava.library.path=target -cp $(MAIN_CLASSES):$(SAMPLES_MAIN_CLASSES) TransactionSample /tmp/rocksdbjni
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni
+	$(AM_V_at)@rm -rf /tmp/forstdbjni
+	$(JAVA_CMD) -ea -Xcheck:jni -Djava.library.path=target -cp $(MAIN_CLASSES):$(SAMPLES_MAIN_CLASSES) TransactionSample /tmp/forstdbjni
+	$(AM_V_at)@rm -rf /tmp/forstdbjni
 
 optimistic_transaction_sample: java
 	$(AM_V_GEN)mkdir -p $(SAMPLES_MAIN_CLASSES)
 	$(AM_V_at)$(JAVAC_CMD) -cp $(MAIN_CLASSES) -d $(SAMPLES_MAIN_CLASSES) $(SAMPLES_MAIN_SRC)/OptimisticTransactionSample.java
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni
-	$(JAVA_CMD) -ea -Xcheck:jni -Djava.library.path=target -cp $(MAIN_CLASSES):$(SAMPLES_MAIN_CLASSES) OptimisticTransactionSample /tmp/rocksdbjni
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni
+	$(AM_V_at)@rm -rf /tmp/forstdbjni
+	$(JAVA_CMD) -ea -Xcheck:jni -Djava.library.path=target -cp $(MAIN_CLASSES):$(SAMPLES_MAIN_CLASSES) OptimisticTransactionSample /tmp/forstdbjni
+	$(AM_V_at)@rm -rf /tmp/forstdbjni
 
 $(JAVA_TEST_LIBDIR):
 	mkdir -p "$(JAVA_TEST_LIBDIR)"
