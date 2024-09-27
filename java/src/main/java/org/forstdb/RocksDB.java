@@ -88,7 +88,8 @@ public class RocksDB extends RocksObject {
       try {
         Thread.sleep(10);
       } catch(final InterruptedException e) {
-        //ignore
+        throw new RuntimeException("Loading the RocksDB shared library is interrupted",
+                    e);
       }
     }
   }
@@ -150,7 +151,8 @@ public class RocksDB extends RocksObject {
       try {
         Thread.sleep(10);
       } catch(final InterruptedException e) {
-        //ignore
+        throw new RuntimeException("Loading the RocksDB shared library is interrupted",
+                            e);
       }
     }
   }
