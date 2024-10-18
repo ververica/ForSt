@@ -20,7 +20,7 @@
 #include "forstjni/cplusplus_to_java_convert.h"
 #include "forstjni/portal.h"
 
-// <editor-fold desc="org.rocksdb.AbstractSlice>
+// <editor-fold desc="org.forstdb.AbstractSlice>
 
 /*
  * Class:     org_forstdb_AbstractSlice
@@ -125,7 +125,7 @@ void Java_org_forstdb_AbstractSlice_disposeInternal(JNIEnv* /*env*/,
 
 // </editor-fold>
 
-// <editor-fold desc="org.rocksdb.Slice>
+// <editor-fold desc="org.forstdb.Slice>
 
 /*
  * Class:     org_forstdb_Slice
@@ -257,7 +257,7 @@ void Java_org_forstdb_Slice_disposeInternalBuf(JNIEnv* /*env*/,
 
 // </editor-fold>
 
-// <editor-fold desc="org.rocksdb.DirectSlice>
+// <editor-fold desc="org.forstdb.DirectSlice>
 
 /*
  * Class:     org_forstdb_DirectSlice

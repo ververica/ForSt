@@ -1784,7 +1784,7 @@ static jobjectArray rocksdb_get_event_listeners_helper(
 /*
  * Class:     org_forstdb_Options
  * Method:    eventListeners
- * Signature: (J)[Lorg/rocksdb/AbstractEventListener;
+ * Signature: (J)[Lorg/forstdb/AbstractEventListener;
  */
 jobjectArray Java_org_forstdb_Options_eventListeners(JNIEnv* env, jclass,
                                                      jlong jhandle) {
@@ -7220,7 +7220,7 @@ void Java_org_forstdb_DBOptions_setEventListeners(JNIEnv* env, jclass,
 /*
  * Class:     org_forstdb_DBOptions
  * Method:    eventListeners
- * Signature: (J)[Lorg/rocksdb/AbstractEventListener;
+ * Signature: (J)[Lorg/forstdb/AbstractEventListener;
  */
 jobjectArray Java_org_forstdb_DBOptions_eventListeners(JNIEnv* env, jclass,
                                                        jlong jhandle) {

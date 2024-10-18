@@ -180,7 +180,7 @@ jlong Java_org_forstdb_Statistics_getAndResetTickerCount(JNIEnv*, jobject,
 /*
  * Class:     org_forstdb_Statistics
  * Method:    getHistogramData
- * Signature: (JB)Lorg/rocksdb/HistogramData;
+ * Signature: (JB)Lorg/forstdb/HistogramData;
  */
 jobject Java_org_forstdb_Statistics_getHistogramData(JNIEnv* env, jobject,
                                                      jlong jhandle,

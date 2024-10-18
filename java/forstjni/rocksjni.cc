@@ -2210,7 +2210,7 @@ jobjectArray Java_org_forstdb_RocksDB_multiGet__JJ_3_3B_3I_3I_3J(
  * Class:     org_forstdb_RocksDB
  * Method:    multiGet
  * Signature:
- * (JJ[J[Ljava/nio/ByteBuffer;[I[I[Ljava/nio/ByteBuffer;[I[Lorg/rocksdb/Status;)V
+ * (JJ[J[Ljava/nio/ByteBuffer;[I[I[Ljava/nio/ByteBuffer;[I[Lorg/forstdb/Status;)V
  */
 void Java_org_forstdb_RocksDB_multiGet__JJ_3J_3Ljava_nio_ByteBuffer_2_3I_3I_3Ljava_nio_ByteBuffer_2_3I_3Lorg_forstdb_Status_2(
     JNIEnv* env, jobject jdb, jlong jdb_handle, jlong jropt_handle,
@@ -3587,7 +3587,7 @@ jobjectArray Java_org_forstdb_RocksDB_getLiveFiles(JNIEnv* env, jobject,
 /*
  * Class:     org_forstdb_RocksDB
  * Method:    getSortedWalFiles
- * Signature: (J)[Lorg/rocksdb/LogFile;
+ * Signature: (J)[Lorg/forstdb/LogFile;
  */
 jobjectArray Java_org_forstdb_RocksDB_getSortedWalFiles(JNIEnv* env, jobject,
                                                         jlong jdb_handle) {
@@ -3674,7 +3674,7 @@ void Java_org_forstdb_RocksDB_deleteFile(JNIEnv* env, jobject, jlong jdb_handle,
 /*
  * Class:     org_forstdb_RocksDB
  * Method:    getLiveFilesMetaData
- * Signature: (J)[Lorg/rocksdb/LiveFileMetaData;
+ * Signature: (J)[Lorg/forstdb/LiveFileMetaData;
  */
 jobjectArray Java_org_forstdb_RocksDB_getLiveFilesMetaData(JNIEnv* env, jobject,
                                                            jlong jdb_handle) {
@@ -3721,7 +3721,7 @@ jobjectArray Java_org_forstdb_RocksDB_getLiveFilesMetaData(JNIEnv* env, jobject,
 /*
  * Class:     org_forstdb_RocksDB
  * Method:    getColumnFamilyMetaData
- * Signature: (JJ)Lorg/rocksdb/ColumnFamilyMetaData;
+ * Signature: (JJ)Lorg/forstdb/ColumnFamilyMetaData;
  */
 jobject Java_org_forstdb_RocksDB_getColumnFamilyMetaData(JNIEnv* env, jobject,
                                                          jlong jdb_handle,

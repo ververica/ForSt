@@ -486,7 +486,7 @@ void Java_org_forstdb_WriteBatchWithIndex_setMaxBytes(JNIEnv* /*env*/,
 /*
  * Class:     org_forstdb_WriteBatchWithIndex
  * Method:    getWriteBatch
- * Signature: (J)Lorg/rocksdb/WriteBatch;
+ * Signature: (J)Lorg/forstdb/WriteBatch;
  */
 jobject Java_org_forstdb_WriteBatchWithIndex_getWriteBatch(JNIEnv* env,
                                                            jobject /*jobj*/,
@@ -898,7 +898,7 @@ jlongArray Java_org_forstdb_WBWIRocksIterator_entry1(JNIEnv* env,
   results[0] = ROCKSDB_NAMESPACE::WriteTypeJni::toJavaWriteType(we.type);
 
   // NOTE: key_slice and value_slice will be freed by
-  // org.rocksdb.DirectSlice#close
+  // org.forstdb.DirectSlice#close
 
   auto* key_slice = new ROCKSDB_NAMESPACE::Slice(we.key.data(), we.key.size());
   results[1] = GET_CPLUSPLUS_POINTER(key_slice);

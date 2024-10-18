@@ -179,7 +179,7 @@ void Java_org_forstdb_TtlDB_closeDatabase(JNIEnv* /* env */, jclass,
 /*
  * Class:     org_forstdb_TtlDB
  * Method:    createColumnFamilyWithTtl
- * Signature: (JLorg/rocksdb/ColumnFamilyDescriptor;[BJI)J;
+ * Signature: (JLorg/forstdb/ColumnFamilyDescriptor;[BJI)J;
  */
 jlong Java_org_forstdb_TtlDB_createColumnFamilyWithTtl(JNIEnv* env, jobject,
                                                        jlong jdb_handle,

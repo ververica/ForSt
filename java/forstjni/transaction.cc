@@ -1700,7 +1700,7 @@ jboolean Java_org_forstdb_Transaction_isDeadlockDetect(JNIEnv* /*env*/,
 /*
  * Class:     org_forstdb_Transaction
  * Method:    getWaitingTxns
- * Signature: (J)Lorg/rocksdb/Transaction/WaitingTransactions;
+ * Signature: (J)Lorg/forstdb/Transaction/WaitingTransactions;
  */
 jobject Java_org_forstdb_Transaction_getWaitingTxns(JNIEnv* env,
                                                     jobject jtransaction_obj,

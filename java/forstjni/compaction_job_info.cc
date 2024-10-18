@@ -51,7 +51,7 @@ jbyteArray Java_org_forstdb_CompactionJobInfo_columnFamilyName(JNIEnv* env,
 /*
  * Class:     org_forstdb_CompactionJobInfo
  * Method:    status
- * Signature: (J)Lorg/rocksdb/Status;
+ * Signature: (J)Lorg/forstdb/Status;
  */
 jobject Java_org_forstdb_CompactionJobInfo_status(JNIEnv* env, jclass,
                                                   jlong jhandle) {

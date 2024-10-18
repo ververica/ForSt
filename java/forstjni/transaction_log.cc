@@ -68,7 +68,7 @@ void Java_org_forstdb_TransactionLogIterator_status(JNIEnv* env,
 /*
  * Class:     org_forstdb_TransactionLogIterator
  * Method:    getBatch
- * Signature: (J)Lorg/rocksdb/TransactionLogIterator$BatchResult
+ * Signature: (J)Lorg/forstdb/TransactionLogIterator$BatchResult
  */
 jobject Java_org_forstdb_TransactionLogIterator_getBatch(JNIEnv* env,
                                                          jobject /*jobj*/,

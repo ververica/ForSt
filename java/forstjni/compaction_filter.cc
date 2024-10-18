@@ -12,7 +12,7 @@
 
 #include "include/org_forstdb_AbstractCompactionFilter.h"
 
-// <editor-fold desc="org.rocksdb.AbstractCompactionFilter">
+// <editor-fold desc="org.forstdb.AbstractCompactionFilter">
 
 /*
  * Class:     org_forstdb_AbstractCompactionFilter

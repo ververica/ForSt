@@ -123,7 +123,7 @@ void Java_org_forstdb_Env_lowerThreadPoolCPUPriority(JNIEnv*, jobject,
 /*
  * Class:     org_forstdb_Env
  * Method:    getThreadList
- * Signature: (J)[Lorg/rocksdb/ThreadStatus;
+ * Signature: (J)[Lorg/forstdb/ThreadStatus;
  */
 jobjectArray Java_org_forstdb_Env_getThreadList(JNIEnv* env, jobject,
                                                 jlong jhandle) {

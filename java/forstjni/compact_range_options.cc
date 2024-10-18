@@ -280,7 +280,7 @@ void Java_org_forstdb_CompactRangeOptions_setFullHistoryTSLow(JNIEnv*, jobject,
 /*
  * Class:     org_forstdb_CompactRangeOptions
  * Method:    fullHistoryTSLow
- * Signature: (J)Lorg/rocksdb/CompactRangeOptions/Timestamp;
+ * Signature: (J)Lorg/forstdb/CompactRangeOptions/Timestamp;
  */
 jobject Java_org_forstdb_CompactRangeOptions_fullHistoryTSLow(JNIEnv* env,
                                                               jobject,

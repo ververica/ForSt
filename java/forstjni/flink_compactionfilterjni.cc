@@ -39,7 +39,7 @@ class JavaListElementFilter
   JavaListElementFilter(JNIEnv* env, jobject jlist_filter)
       : JniCallbackBase(env, jlist_filter) {
     jclass jclazz = ROCKSDB_NAMESPACE::JavaClass::getJClass(
-        env, "org/rocksdb/FlinkCompactionFilter$ListElementFilter");
+        env, "org/forstdb/FlinkCompactionFilter$ListElementFilter");
     if (jclazz == nullptr) {
       // exception occurred accessing class
       return;
@@ -82,14 +82,14 @@ class JavaListElemenFilterFactory
   JavaListElemenFilterFactory(JNIEnv* env, jobject jlist_filter_factory)
       : JniCallbackBase(env, jlist_filter_factory) {
     jclass jclazz = ROCKSDB_NAMESPACE::JavaClass::getJClass(
-        env, "org/rocksdb/FlinkCompactionFilter$ListElementFilterFactory");
+        env, "org/forstdb/FlinkCompactionFilter$ListElementFilterFactory");
     if (jclazz == nullptr) {
       // exception occurred accessing class
       return;
     }
     m_jcreate_filter_methodid = env->GetMethodID(
         jclazz, "createListElementFilter",
-        "()Lorg/rocksdb/FlinkCompactionFilter$ListElementFilter;");
+        "()Lorg/forstdb/FlinkCompactionFilter$ListElementFilter;");
     assert(m_jcreate_filter_methodid != nullptr);
   }
 
@@ -117,7 +117,7 @@ class JavaTimeProvider
   JavaTimeProvider(JNIEnv* env, jobject jtime_provider)
       : JniCallbackBase(env, jtime_provider) {
     jclass jclazz = ROCKSDB_NAMESPACE::JavaClass::getJClass(
-        env, "org/rocksdb/FlinkCompactionFilter$TimeProvider");
+        env, "org/forstdb/FlinkCompactionFilter$TimeProvider");
     if (jclazz == nullptr) {
       // exception occurred accessing class
       return;
@@ -214,7 +214,7 @@ jlong Java_org_forstdb_FlinkCompactionFilter_createNewFlinkCompactionFilter0(
 /*
  * Class:     org_forstdb_FlinkCompactionFilter
  * Method:    configureFlinkCompactionFilter
- * Signature: (JIIJJILorg/rocksdb/FlinkCompactionFilter$ListElementFilter;)Z
+ * Signature: (JIIJJILorg/forstdb/FlinkCompactionFilter$ListElementFilter;)Z
  */
 jboolean Java_org_forstdb_FlinkCompactionFilter_configureFlinkCompactionFilter(
     JNIEnv* env, jclass /* jcls */, jlong handle, jint ji_state_type,

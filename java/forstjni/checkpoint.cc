@@ -73,7 +73,7 @@ void Java_org_forstdb_Checkpoint_createCheckpoint(JNIEnv* env, jobject /*jobj*/,
 /*
  * Class:     org_forstdb_Checkpoint
  * Method:    exportColumnFamily
- * Signature: (JJLjava/lang/String;)Lorg/rocksdb/ExportImportFilesMetaData;
+ * Signature: (JJLjava/lang/String;)Lorg/forstdb/ExportImportFilesMetaData;
  */
 jlong Java_org_forstdb_Checkpoint_exportColumnFamily(
     JNIEnv* env, jobject /*jobj*/, jlong jcheckpoint_handle,

@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the "bridge" between Java and C++ for
-// org.rocksdb.AbstractTableFilter.
+// org.forstdb.AbstractTableFilter.
 
 #include <jni.h>
 

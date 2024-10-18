@@ -141,7 +141,7 @@ jstring Java_org_forstdb_OptionsUtil_getLatestOptionsFileName(
 /*
  * Class:     org_forstdb_OptionsUtil
  * Method:    readTableFormatConfig
- * Signature: (J)Lorg/rocksdb/TableFormatConfig;
+ * Signature: (J)Lorg/forstdb/TableFormatConfig;
  */
 jobject Java_org_forstdb_OptionsUtil_readTableFormatConfig(JNIEnv* env, jclass,
                                                            jlong jcf_options) {

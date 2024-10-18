@@ -42,7 +42,7 @@ jint Java_org_forstdb_ColumnFamilyHandle_getID(JNIEnv* /*env*/,
 /*
  * Class:     org_forstdb_ColumnFamilyHandle
  * Method:    getDescriptor
- * Signature: (J)Lorg/rocksdb/ColumnFamilyDescriptor;
+ * Signature: (J)Lorg/forstdb/ColumnFamilyDescriptor;
  */
 jobject Java_org_forstdb_ColumnFamilyHandle_getDescriptor(JNIEnv* env,
                                                           jobject /*jobj*/,

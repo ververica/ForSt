@@ -639,7 +639,7 @@ void Java_org_forstdb_WriteBatch_markWalTerminationPoint(JNIEnv* /*env*/,
 /*
  * Class:     org_forstdb_WriteBatch
  * Method:    getWalTerminationPoint
- * Signature: (J)Lorg/rocksdb/WriteBatch/SavePoint;
+ * Signature: (J)Lorg/forstdb/WriteBatch/SavePoint;
  */
 jobject Java_org_forstdb_WriteBatch_getWalTerminationPoint(JNIEnv* env,
                                                            jobject /*jobj*/,

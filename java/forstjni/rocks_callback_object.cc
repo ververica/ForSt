@@ -4,7 +4,7 @@
 //  (found in the LICENSE.Apache file in the root directory).
 //
 // This file implements the "bridge" between Java and C++ for
-// JNI Callbacks from C++ to sub-classes or org.rocksdb.RocksCallbackObject
+// JNI Callbacks from C++ to sub-classes or org.forstdb.RocksCallbackObject
 
 #include <jni.h>
 

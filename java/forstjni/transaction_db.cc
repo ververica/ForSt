@@ -357,7 +357,7 @@ jobject Java_org_forstdb_TransactionDB_getLockStatusData(JNIEnv* env, jobject,
 /*
  * Class:     org_forstdb_TransactionDB
  * Method:    getDeadlockInfoBuffer
- * Signature: (J)[Lorg/rocksdb/TransactionDB/DeadlockPath;
+ * Signature: (J)[Lorg/forstdb/TransactionDB/DeadlockPath;
  */
 jobjectArray Java_org_forstdb_TransactionDB_getDeadlockInfoBuffer(
     JNIEnv* env, jobject jobj, jlong jhandle) {
