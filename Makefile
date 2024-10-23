@@ -6,7 +6,7 @@
 
 #-----------------------------------------------
 
-FORST_VERSION ?= 0.1.0
+FORST_VERSION ?= 0.1.2-beta
 
 BASH_EXISTS := $(shell which bash)
 SHELL := $(shell which bash)
@@ -2117,6 +2117,7 @@ else
 endif
 endif
 ROCKSDB_JAVA_VERSION ?= $(ROCKSDB_MAJOR).$(ROCKSDB_MINOR).$(ROCKSDB_PATCH)
+ROCKSDB_JAVA_VERSION = $(FORST_VERSION)
 ROCKSDB_JAR = forstjni-$(ROCKSDB_JAVA_VERSION)-linux$(ARCH)$(JNI_LIBC_POSTFIX).jar
 ROCKSDB_JAR_ALL = forstjni-$(ROCKSDB_JAVA_VERSION).jar
 ROCKSDB_JAVADOCS_JAR = forstjni-$(ROCKSDB_JAVA_VERSION)-javadoc.jar
