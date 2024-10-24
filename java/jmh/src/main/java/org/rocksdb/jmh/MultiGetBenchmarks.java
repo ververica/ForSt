@@ -4,10 +4,10 @@
  *  COPYING file in the root directory) and Apache 2.0 License
  *  (found in the LICENSE.Apache file in the root directory).
  */
-package org.rocksdb.jmh;
+package org.forstdb.jmh;
 
-import static org.rocksdb.util.KVUtils.ba;
-import static org.rocksdb.util.KVUtils.keys;
+import static org.forstdb.util.KVUtils.ba;
+import static org.forstdb.util.KVUtils.keys;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -21,8 +21,8 @@ import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
-import org.rocksdb.*;
-import org.rocksdb.util.FileUtils;
+import org.forstdb.*;
+import org.forstdb.util.FileUtils;
 
 @State(Scope.Thread)
 public class MultiGetBenchmarks {

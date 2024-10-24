@@ -1,101 +1,103 @@
 NATIVE_JAVA_CLASSES = \
-	org.rocksdb.AbstractCompactionFilter\
-	org.rocksdb.AbstractCompactionFilterFactory\
-	org.rocksdb.AbstractComparator\
-	org.rocksdb.AbstractEventListener\
-	org.rocksdb.AbstractSlice\
-	org.rocksdb.AbstractTableFilter\
-	org.rocksdb.AbstractTraceWriter\
-	org.rocksdb.AbstractTransactionNotifier\
-	org.rocksdb.AbstractWalFilter\
-	org.rocksdb.BackupEngine\
-	org.rocksdb.BackupEngineOptions\
-	org.rocksdb.BlockBasedTableConfig\
-	org.rocksdb.BloomFilter\
-	org.rocksdb.Checkpoint\
-	org.rocksdb.ClockCache\
-	org.rocksdb.Cache\
-	org.rocksdb.CassandraCompactionFilter\
-	org.rocksdb.CassandraValueMergeOperator\
-	org.rocksdb.ColumnFamilyHandle\
-	org.rocksdb.ColumnFamilyOptions\
-	org.rocksdb.CompactionJobInfo\
-	org.rocksdb.CompactionJobStats\
-	org.rocksdb.CompactionOptions\
-	org.rocksdb.CompactionOptionsFIFO\
-	org.rocksdb.CompactionOptionsUniversal\
-	org.rocksdb.CompactRangeOptions\
-	org.rocksdb.ComparatorOptions\
-	org.rocksdb.CompressionOptions\
-	org.rocksdb.ConfigOptions\
-	org.rocksdb.DBOptions\
-	org.rocksdb.DirectSlice\
-	org.rocksdb.Env\
-	org.rocksdb.EnvOptions\
-	org.rocksdb.FlinkCompactionFilter\
-	org.rocksdb.FlushOptions\
-	org.rocksdb.Filter\
-	org.rocksdb.IngestExternalFileOptions\
-	org.rocksdb.HashLinkedListMemTableConfig\
-	org.rocksdb.HashSkipListMemTableConfig\
-	org.rocksdb.ConcurrentTaskLimiter\
-	org.rocksdb.ConcurrentTaskLimiterImpl\
-	org.rocksdb.KeyMayExist\
-	org.rocksdb.Logger\
-	org.rocksdb.LRUCache\
-	org.rocksdb.MemoryUsageType\
-	org.rocksdb.MemoryUtil\
-	org.rocksdb.MergeOperator\
-	org.rocksdb.NativeComparatorWrapper\
-	org.rocksdb.OptimisticTransactionDB\
-	org.rocksdb.OptimisticTransactionOptions\
-	org.rocksdb.Options\
-	org.rocksdb.OptionsUtil\
-	org.rocksdb.PersistentCache\
-	org.rocksdb.PlainTableConfig\
-	org.rocksdb.RateLimiter\
-	org.rocksdb.ReadOptions\
-	org.rocksdb.RemoveEmptyValueCompactionFilter\
-	org.rocksdb.RestoreOptions\
-	org.rocksdb.RocksCallbackObject\
-	org.rocksdb.RocksDB\
-	org.rocksdb.RocksEnv\
-	org.rocksdb.RocksIterator\
-	org.rocksdb.RocksMemEnv\
-	org.rocksdb.SkipListMemTableConfig\
-	org.rocksdb.Slice\
-	org.rocksdb.SstFileManager\
-	org.rocksdb.SstFileWriter\
-	org.rocksdb.SstFileReader\
-	org.rocksdb.SstFileReaderIterator\
-	org.rocksdb.SstPartitionerFactory\
-	org.rocksdb.SstPartitionerFixedPrefixFactory\
-	org.rocksdb.Statistics\
-	org.rocksdb.ThreadStatus\
-	org.rocksdb.TimedEnv\
-	org.rocksdb.Transaction\
-	org.rocksdb.TransactionDB\
-	org.rocksdb.TransactionDBOptions\
-	org.rocksdb.TransactionOptions\
-	org.rocksdb.TransactionLogIterator\
-	org.rocksdb.TtlDB\
-	org.rocksdb.VectorMemTableConfig\
-	org.rocksdb.Snapshot\
-	org.rocksdb.StringAppendOperator\
-	org.rocksdb.UInt64AddOperator\
-	org.rocksdb.WriteBatch\
-	org.rocksdb.WriteBatch.Handler\
-	org.rocksdb.WriteOptions\
-	org.rocksdb.WriteBatchWithIndex\
-	org.rocksdb.WriteBufferManager\
-	org.rocksdb.WBWIRocksIterator
+	org.forstdb.AbstractCompactionFilter\
+	org.forstdb.AbstractCompactionFilterFactory\
+	org.forstdb.AbstractComparator\
+	org.forstdb.AbstractEventListener\
+	org.forstdb.AbstractSlice\
+	org.forstdb.AbstractTableFilter\
+	org.forstdb.AbstractTraceWriter\
+	org.forstdb.AbstractTransactionNotifier\
+	org.forstdb.AbstractWalFilter\
+	org.forstdb.BackupEngine\
+	org.forstdb.BackupEngineOptions\
+	org.forstdb.BlockBasedTableConfig\
+	org.forstdb.BloomFilter\
+	org.forstdb.Checkpoint\
+	org.forstdb.ClockCache\
+	org.forstdb.Cache\
+	org.forstdb.CassandraCompactionFilter\
+	org.forstdb.CassandraValueMergeOperator\
+	org.forstdb.ColumnFamilyHandle\
+	org.forstdb.ColumnFamilyOptions\
+	org.forstdb.CompactionJobInfo\
+	org.forstdb.CompactionJobStats\
+	org.forstdb.CompactionOptions\
+	org.forstdb.CompactionOptionsFIFO\
+	org.forstdb.CompactionOptionsUniversal\
+	org.forstdb.CompactRangeOptions\
+	org.forstdb.ComparatorOptions\
+	org.forstdb.CompressionOptions\
+	org.forstdb.ConfigOptions\
+	org.forstdb.DBOptions\
+	org.forstdb.DirectSlice\
+	org.forstdb.Env\
+	org.forstdb.EnvOptions\
+	org.forstdb.FlinkCompactionFilter\
+	org.forstdb.FlushOptions\
+	org.forstdb.Filter\
+	org.forstdb.IngestExternalFileOptions\
+	org.forstdb.HashLinkedListMemTableConfig\
+	org.forstdb.HashSkipListMemTableConfig\
+	org.forstdb.ConcurrentTaskLimiter\
+	org.forstdb.ConcurrentTaskLimiterImpl\
+	org.forstdb.KeyMayExist\
+	org.forstdb.Logger\
+	org.forstdb.LRUCache\
+	org.forstdb.MemoryUsageType\
+	org.forstdb.MemoryUtil\
+	org.forstdb.MergeOperator\
+	org.forstdb.NativeComparatorWrapper\
+	org.forstdb.OptimisticTransactionDB\
+	org.forstdb.OptimisticTransactionOptions\
+	org.forstdb.Options\
+	org.forstdb.OptionsUtil\
+	org.forstdb.PersistentCache\
+	org.forstdb.PerfContext\
+	org.forstdb.PerfLevel\
+	org.forstdb.PlainTableConfig\
+	org.forstdb.RateLimiter\
+	org.forstdb.ReadOptions\
+	org.forstdb.RemoveEmptyValueCompactionFilter\
+	org.forstdb.RestoreOptions\
+	org.forstdb.RocksCallbackObject\
+	org.forstdb.RocksDB\
+	org.forstdb.RocksEnv\
+	org.forstdb.RocksIterator\
+	org.forstdb.RocksMemEnv\
+	org.forstdb.SkipListMemTableConfig\
+	org.forstdb.Slice\
+	org.forstdb.SstFileManager\
+	org.forstdb.SstFileWriter\
+	org.forstdb.SstFileReader\
+	org.forstdb.SstFileReaderIterator\
+	org.forstdb.SstPartitionerFactory\
+	org.forstdb.SstPartitionerFixedPrefixFactory\
+	org.forstdb.Statistics\
+	org.forstdb.ThreadStatus\
+	org.forstdb.TimedEnv\
+	org.forstdb.Transaction\
+	org.forstdb.TransactionDB\
+	org.forstdb.TransactionDBOptions\
+	org.forstdb.TransactionOptions\
+	org.forstdb.TransactionLogIterator\
+	org.forstdb.TtlDB\
+	org.forstdb.VectorMemTableConfig\
+	org.forstdb.Snapshot\
+	org.forstdb.StringAppendOperator\
+	org.forstdb.UInt64AddOperator\
+	org.forstdb.WriteBatch\
+	org.forstdb.WriteBatch.Handler\
+	org.forstdb.WriteOptions\
+	org.forstdb.WriteBatchWithIndex\
+	org.forstdb.WriteBufferManager\
+	org.forstdb.WBWIRocksIterator
 
 NATIVE_JAVA_TEST_CLASSES = \
-    org.rocksdb.RocksDBExceptionTest\
-    org.rocksdb.test.TestableEventListener\
-    org.rocksdb.NativeComparatorWrapperTest.NativeStringComparatorWrapper\
-    org.rocksdb.WriteBatchTest\
-    org.rocksdb.WriteBatchTestInternalHelper
+    org.forstdb.RocksDBExceptionTest\
+    org.forstdb.test.TestableEventListener\
+    org.forstdb.NativeComparatorWrapperTest.NativeStringComparatorWrapper\
+    org.forstdb.WriteBatchTest\
+    org.forstdb.WriteBatchTestInternalHelper
 
 ROCKSDB_MAJOR = $(shell grep -E "ROCKSDB_MAJOR.[0-9]" ../include/rocksdb/version.h | cut -d ' ' -f 3)
 ROCKSDB_MINOR = $(shell grep -E "ROCKSDB_MINOR.[0-9]" ../include/rocksdb/version.h | cut -d ' ' -f 3)
@@ -106,102 +108,109 @@ ARCH := $(shell getconf LONG_BIT)
 SHA256_CMD ?= sha256sum
 
 JAVA_TESTS = \
-	org.rocksdb.BackupEngineOptionsTest\
-	org.rocksdb.BackupEngineTest\
-	org.rocksdb.BlobOptionsTest\
-	org.rocksdb.BlockBasedTableConfigTest\
-	org.rocksdb.BuiltinComparatorTest\
-	org.rocksdb.ByteBufferUnsupportedOperationTest\
-	org.rocksdb.BytewiseComparatorRegressionTest\
-	org.rocksdb.util.BytewiseComparatorTest\
-	org.rocksdb.util.BytewiseComparatorIntTest\
-	org.rocksdb.CheckPointTest\
-	org.rocksdb.ClockCacheTest\
-	org.rocksdb.ColumnFamilyOptionsTest\
-	org.rocksdb.ColumnFamilyTest\
-	org.rocksdb.CompactionFilterFactoryTest\
-	org.rocksdb.CompactionJobInfoTest\
-	org.rocksdb.CompactionJobStatsTest\
-	org.rocksdb.CompactionOptionsTest\
-	org.rocksdb.CompactionOptionsFIFOTest\
-	org.rocksdb.CompactionOptionsUniversalTest\
-	org.rocksdb.CompactionPriorityTest\
-	org.rocksdb.CompactionStopStyleTest\
-	org.rocksdb.ComparatorOptionsTest\
-	org.rocksdb.CompressionOptionsTest\
-	org.rocksdb.CompressionTypesTest\
-	org.rocksdb.DBOptionsTest\
-	org.rocksdb.DirectSliceTest\
-	org.rocksdb.util.EnvironmentTest\
-	org.rocksdb.EnvOptionsTest\
-	org.rocksdb.EventListenerTest\
-	org.rocksdb.IngestExternalFileOptionsTest\
-	org.rocksdb.util.IntComparatorTest\
-	org.rocksdb.util.JNIComparatorTest\
-	org.rocksdb.FilterTest\
-	org.rocksdb.FlushTest\
-	org.rocksdb.ImportColumnFamilyTest\
-	org.rocksdb.InfoLogLevelTest\
-	org.rocksdb.KeyMayExistTest\
-	org.rocksdb.ConcurrentTaskLimiterTest\
-	org.rocksdb.LoggerTest\
-	org.rocksdb.LRUCacheTest\
-	org.rocksdb.MemoryUtilTest\
-	org.rocksdb.MemTableTest\
-	org.rocksdb.MergeTest\
-	org.rocksdb.MultiColumnRegressionTest \
-	org.rocksdb.MultiGetManyKeysTest\
-	org.rocksdb.MultiGetTest\
-	org.rocksdb.MixedOptionsTest\
-	org.rocksdb.MutableColumnFamilyOptionsTest\
-	org.rocksdb.MutableDBOptionsTest\
-	org.rocksdb.MutableOptionsGetSetTest \
-	org.rocksdb.NativeComparatorWrapperTest\
-	org.rocksdb.NativeLibraryLoaderTest\
-	org.rocksdb.OptimisticTransactionTest\
-	org.rocksdb.OptimisticTransactionDBTest\
-	org.rocksdb.OptimisticTransactionOptionsTest\
-	org.rocksdb.OptionsUtilTest\
-	org.rocksdb.OptionsTest\
-	org.rocksdb.PlainTableConfigTest\
-	org.rocksdb.RateLimiterTest\
-	org.rocksdb.ReadOnlyTest\
-	org.rocksdb.ReadOptionsTest\
-	org.rocksdb.util.ReverseBytewiseComparatorIntTest\
-	org.rocksdb.RocksDBTest\
-	org.rocksdb.RocksDBExceptionTest\
-	org.rocksdb.DefaultEnvTest\
-	org.rocksdb.RocksIteratorTest\
-	org.rocksdb.RocksMemEnvTest\
-	org.rocksdb.util.SizeUnitTest\
-	org.rocksdb.SecondaryDBTest\
-	org.rocksdb.SliceTest\
-	org.rocksdb.SnapshotTest\
-	org.rocksdb.SstFileManagerTest\
-	org.rocksdb.SstFileWriterTest\
-	org.rocksdb.SstFileReaderTest\
-	org.rocksdb.SstPartitionerTest\
-	org.rocksdb.TableFilterTest\
-	org.rocksdb.TimedEnvTest\
-	org.rocksdb.TransactionTest\
-	org.rocksdb.TransactionDBTest\
-	org.rocksdb.TransactionOptionsTest\
-	org.rocksdb.TransactionDBOptionsTest\
-	org.rocksdb.TransactionLogIteratorTest\
-	org.rocksdb.TtlDBTest\
-	org.rocksdb.StatisticsTest\
-	org.rocksdb.StatisticsCollectorTest\
-	org.rocksdb.VerifyChecksumsTest\
-	org.rocksdb.WalFilterTest\
-	org.rocksdb.WALRecoveryModeTest\
-	org.rocksdb.WriteBatchHandlerTest\
-	org.rocksdb.WriteBatchTest\
-	org.rocksdb.WriteBatchThreadedTest\
-	org.rocksdb.WriteOptionsTest\
-	org.rocksdb.WriteBatchWithIndexTest
+	org.forstdb.BackupEngineOptionsTest\
+	org.forstdb.BackupEngineTest\
+	org.forstdb.BlobOptionsTest\
+	org.forstdb.BlockBasedTableConfigTest\
+	org.forstdb.BuiltinComparatorTest\
+	org.forstdb.ByteBufferUnsupportedOperationTest\
+	org.forstdb.BytewiseComparatorRegressionTest\
+	org.forstdb.util.BytewiseComparatorTest\
+	org.forstdb.util.BytewiseComparatorIntTest\
+	org.forstdb.CheckPointTest\
+	org.forstdb.ClockCacheTest\
+	org.forstdb.ColumnFamilyOptionsTest\
+	org.forstdb.ColumnFamilyTest\
+	org.forstdb.CompactionFilterFactoryTest\
+	org.forstdb.CompactionJobInfoTest\
+	org.forstdb.CompactionJobStatsTest\
+	org.forstdb.CompactionOptionsTest\
+	org.forstdb.CompactionOptionsFIFOTest\
+	org.forstdb.CompactionOptionsUniversalTest\
+	org.forstdb.CompactionPriorityTest\
+	org.forstdb.CompactionStopStyleTest\
+	org.forstdb.ComparatorOptionsTest\
+	org.forstdb.CompressionOptionsTest\
+	org.forstdb.CompressionTypesTest\
+	org.forstdb.DBOptionsTest\
+	org.forstdb.DirectSliceTest\
+	org.forstdb.util.EnvironmentTest\
+	org.forstdb.EnvOptionsTest\
+	org.forstdb.EventListenerTest\
+	org.forstdb.IngestExternalFileOptionsTest\
+	org.forstdb.util.IntComparatorTest\
+	org.forstdb.util.JNIComparatorTest\
+	org.forstdb.FilterTest\
+	org.forstdb.FlushTest\
+	org.forstdb.ImportColumnFamilyTest\
+	org.forstdb.InfoLogLevelTest\
+	org.forstdb.KeyExistsTest \
+	org.forstdb.KeyMayExistTest\
+	org.forstdb.ConcurrentTaskLimiterTest\
+	org.forstdb.LoggerTest\
+	org.forstdb.LRUCacheTest\
+	org.forstdb.MemoryUtilTest\
+	org.forstdb.MemTableTest\
+	org.forstdb.MergeCFVariantsTest\
+	org.forstdb.MergeTest\
+	org.forstdb.MergeVariantsTest\
+	org.forstdb.MultiColumnRegressionTest \
+	org.forstdb.MultiGetManyKeysTest\
+	org.forstdb.MultiGetTest\
+	org.forstdb.MixedOptionsTest\
+	org.forstdb.MutableColumnFamilyOptionsTest\
+	org.forstdb.MutableDBOptionsTest\
+	org.forstdb.MutableOptionsGetSetTest \
+	org.forstdb.NativeComparatorWrapperTest\
+	org.forstdb.NativeLibraryLoaderTest\
+	org.forstdb.OptimisticTransactionTest\
+	org.forstdb.OptimisticTransactionDBTest\
+	org.forstdb.OptimisticTransactionOptionsTest\
+	org.forstdb.OptionsUtilTest\
+	org.forstdb.OptionsTest\
+	org.forstdb.PerfLevelTest \
+	org.forstdb.PerfContextTest \
+	org.forstdb.PutCFVariantsTest\
+	org.forstdb.PutVariantsTest\
+	org.forstdb.PlainTableConfigTest\
+	org.forstdb.RateLimiterTest\
+	org.forstdb.ReadOnlyTest\
+	org.forstdb.ReadOptionsTest\
+	org.forstdb.util.ReverseBytewiseComparatorIntTest\
+	org.forstdb.RocksDBTest\
+	org.forstdb.RocksDBExceptionTest\
+	org.forstdb.DefaultEnvTest\
+	org.forstdb.RocksIteratorTest\
+	org.forstdb.RocksMemEnvTest\
+	org.forstdb.util.SizeUnitTest\
+	org.forstdb.SecondaryDBTest\
+	org.forstdb.SliceTest\
+	org.forstdb.SnapshotTest\
+	org.forstdb.SstFileManagerTest\
+	org.forstdb.SstFileWriterTest\
+	org.forstdb.SstFileReaderTest\
+	org.forstdb.SstPartitionerTest\
+	org.forstdb.TableFilterTest\
+	org.forstdb.TimedEnvTest\
+	org.forstdb.TransactionTest\
+	org.forstdb.TransactionDBTest\
+	org.forstdb.TransactionOptionsTest\
+	org.forstdb.TransactionDBOptionsTest\
+	org.forstdb.TransactionLogIteratorTest\
+	org.forstdb.TtlDBTest\
+	org.forstdb.StatisticsTest\
+	org.forstdb.StatisticsCollectorTest\
+	org.forstdb.VerifyChecksumsTest\
+	org.forstdb.WalFilterTest\
+	org.forstdb.WALRecoveryModeTest\
+	org.forstdb.WriteBatchHandlerTest\
+	org.forstdb.WriteBatchTest\
+	org.forstdb.WriteBatchThreadedTest\
+	org.forstdb.WriteOptionsTest\
+	org.forstdb.WriteBatchWithIndexTest
 
 FLINK_TESTS =  \
-    org.rocksdb.flink.FlinkEnvTest
+    org.forstdb.flink.FlinkEnvTest
 
 MAIN_SRC = src/main/java
 TEST_SRC = src/test/java
@@ -268,6 +277,8 @@ JAVADOC_CMD := javadoc
 endif
 endif
 
+MAVEN_CMD := mvn
+
 # Look for the Java version (1.6->6, 1.7->7, 1.8->8, 11.0->11, 13.0->13, 15.0->15 etc..)
 JAVAC_VERSION := $(shell $(JAVAC_CMD) -version 2>&1)
 JAVAC_MAJOR_VERSION := $(word 2,$(subst ., ,$(JAVAC_VERSION)))
@@ -291,11 +302,11 @@ include $(ROCKSDB_PLUGIN_MKS)
 
 # Add paths to Java sources in plugins
 ROCKSDB_PLUGIN_JAVA_ROOTS = $(foreach plugin, $(ROCKSDB_PLUGINS), $(PLUGIN_PATH)/$(plugin)/java)
-PLUGIN_SOURCES = $(foreach root, $(ROCKSDB_PLUGIN_JAVA_ROOTS), $(foreach pkg, org/rocksdb/util org/rocksdb, $(root)/$(MAIN_SRC)/$(pkg)/*.java))
-CORE_SOURCES = $(foreach pkg, org/rocksdb/util org/rocksdb, $(MAIN_SRC)/$(pkg)/*.java)
+PLUGIN_SOURCES = $(foreach root, $(ROCKSDB_PLUGIN_JAVA_ROOTS), $(foreach pkg, org/forstdb/util org/forstdb, $(root)/$(MAIN_SRC)/$(pkg)/*.java))
+CORE_SOURCES = $(foreach pkg, org/forstdb/util org/forstdb, $(MAIN_SRC)/$(pkg)/*.java)
 SOURCES = $(wildcard $(CORE_SOURCES) $(PLUGIN_SOURCES))
-PLUGIN_TEST_SOURCES = $(foreach root, $(ROCKSDB_PLUGIN_JAVA_ROOTS), $(foreach pkg, org/rocksdb/test org/rocksdb/util org/rocksdb, $(root)/$(TEST_SRC)/$(pkg)/*.java))
-CORE_TEST_SOURCES = $(foreach pkg, org/rocksdb/test org/rocksdb/util org/rocksdb/flink org/rocksdb, $(TEST_SRC)/$(pkg)/*.java)
+PLUGIN_TEST_SOURCES = $(foreach root, $(ROCKSDB_PLUGIN_JAVA_ROOTS), $(foreach pkg, org/forstdb/test org/forstdb/util org/forstdb, $(root)/$(TEST_SRC)/$(pkg)/*.java))
+CORE_TEST_SOURCES = $(foreach pkg, org/forstdb/test org/forstdb/util org/forstdb/flink org/forstdb, $(TEST_SRC)/$(pkg)/*.java)
 TEST_SOURCES = $(wildcard $(CORE_TEST_SOURCES) $(PLUGIN_TEST_SOURCES))
 MOCK_FLINK_TEST_SOURCES = $(foreach pkg, org/apache/flink/core/fs  org/apache/flink/state/forst/fs, flinktestmock/src/main/java/$(pkg)/*.java)
 
@@ -346,32 +357,32 @@ java: java-version
 sample: java
 	$(AM_V_GEN)mkdir -p $(SAMPLES_MAIN_CLASSES)
 	$(AM_V_at)$(JAVAC_CMD) $(JAVAC_ARGS) -cp $(MAIN_CLASSES) -d $(SAMPLES_MAIN_CLASSES) $(SAMPLES_MAIN_SRC)/RocksDBSample.java
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni_not_found
-	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp $(MAIN_CLASSES):$(SAMPLES_MAIN_CLASSES) RocksDBSample /tmp/rocksdbjni
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni_not_found
+	$(AM_V_at)@rm -rf /tmp/forstjni
+	$(AM_V_at)@rm -rf /tmp/forstjni_not_found
+	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp $(MAIN_CLASSES):$(SAMPLES_MAIN_CLASSES) RocksDBSample /tmp/forstjni
+	$(AM_V_at)@rm -rf /tmp/forstjni
+	$(AM_V_at)@rm -rf /tmp/forstjni_not_found
 
 column_family_sample: java
 	$(AM_V_GEN)mkdir -p $(SAMPLES_MAIN_CLASSES)
 	$(AM_V_at)$(JAVAC_CMD) $(JAVAC_ARGS) -cp $(MAIN_CLASSES) -d $(SAMPLES_MAIN_CLASSES) $(SAMPLES_MAIN_SRC)/RocksDBColumnFamilySample.java
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni
-	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp $(MAIN_CLASSES):$(SAMPLES_MAIN_CLASSES) RocksDBColumnFamilySample /tmp/rocksdbjni
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni
+	$(AM_V_at)@rm -rf /tmp/forstjni
+	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp $(MAIN_CLASSES):$(SAMPLES_MAIN_CLASSES) RocksDBColumnFamilySample /tmp/forstjni
+	$(AM_V_at)@rm -rf /tmp/forstjni
 
 transaction_sample: java
 	$(AM_V_GEN)mkdir -p $(SAMPLES_MAIN_CLASSES)
 	$(AM_V_at)$(JAVAC_CMD) -cp $(MAIN_CLASSES) -d $(SAMPLES_MAIN_CLASSES) $(SAMPLES_MAIN_SRC)/TransactionSample.java
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni
-	$(JAVA_CMD) -ea -Xcheck:jni -Djava.library.path=target -cp $(MAIN_CLASSES):$(SAMPLES_MAIN_CLASSES) TransactionSample /tmp/rocksdbjni
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni
+	$(AM_V_at)@rm -rf /tmp/forstjni
+	$(JAVA_CMD) -ea -Xcheck:jni -Djava.library.path=target -cp $(MAIN_CLASSES):$(SAMPLES_MAIN_CLASSES) TransactionSample /tmp/forstjni
+	$(AM_V_at)@rm -rf /tmp/forstjni
 
 optimistic_transaction_sample: java
 	$(AM_V_GEN)mkdir -p $(SAMPLES_MAIN_CLASSES)
 	$(AM_V_at)$(JAVAC_CMD) -cp $(MAIN_CLASSES) -d $(SAMPLES_MAIN_CLASSES) $(SAMPLES_MAIN_SRC)/OptimisticTransactionSample.java
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni
-	$(JAVA_CMD) -ea -Xcheck:jni -Djava.library.path=target -cp $(MAIN_CLASSES):$(SAMPLES_MAIN_CLASSES) OptimisticTransactionSample /tmp/rocksdbjni
-	$(AM_V_at)@rm -rf /tmp/rocksdbjni
+	$(AM_V_at)@rm -rf /tmp/forstjni
+	$(JAVA_CMD) -ea -Xcheck:jni -Djava.library.path=target -cp $(MAIN_CLASSES):$(SAMPLES_MAIN_CLASSES) OptimisticTransactionSample /tmp/forstjni
+	$(AM_V_at)@rm -rf /tmp/forstjni
 
 $(JAVA_TEST_LIBDIR):
 	mkdir -p "$(JAVA_TEST_LIBDIR)"
@@ -447,14 +458,18 @@ test: java mock_flink_fs java_test
 	$(MAKE) run_test
 
 run_test:
-	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp "$(MAIN_CLASSES):$(TEST_CLASSES):$(JAVA_TESTCLASSPATH):target/*" org.rocksdb.test.RocksJunitRunner $(ALL_JAVA_TESTS)
+	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp "$(MAIN_CLASSES):$(TEST_CLASSES):$(JAVA_TESTCLASSPATH):target/*" org.forstdb.test.RocksJunitRunner $(ALL_JAVA_TESTS)
+	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp "$(MAIN_CLASSES):$(TEST_CLASSES):$(JAVA_TESTCLASSPATH):target/*" org.forstdb.test.RocksJunitRunner org.forstdb.StatisticsTest
 
 run_plugin_test:
-	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp "$(MAIN_CLASSES):$(TEST_CLASSES):$(JAVA_TESTCLASSPATH):target/*" org.rocksdb.test.RocksJunitRunner $(ROCKSDB_PLUGIN_JAVA_TESTS)
+	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp "$(MAIN_CLASSES):$(TEST_CLASSES):$(JAVA_TESTCLASSPATH):target/*" org.forstdb.test.RocksJunitRunner $(ROCKSDB_PLUGIN_JAVA_TESTS)
 
 db_bench: java
 	$(AM_V_GEN)mkdir -p $(BENCHMARK_MAIN_CLASSES)
-	$(AM_V_at)$(JAVAC_CMD) $(JAVAC_ARGS) -cp $(MAIN_CLASSES) -d $(BENCHMARK_MAIN_CLASSES) $(BENCHMARK_MAIN_SRC)/org/rocksdb/benchmark/*.java
+	$(AM_V_at)$(JAVAC_CMD) $(JAVAC_ARGS) -cp $(MAIN_CLASSES) -d $(BENCHMARK_MAIN_CLASSES) $(BENCHMARK_MAIN_SRC)/org/forstdb/benchmark/*.java
+
+pmd:
+	$(MAVEN_CMD) pmd:pmd pmd:cpd pmd:check
 
 mock_flink_fs:
 	$(AM_V_at) $(JAVAC_CMD) $(JAVAC_ARGS) -cp $(MAIN_CLASSES):$(JAVA_TESTCLASSPATH) -h $(NATIVE_INCLUDE) -d $(TEST_CLASSES) \
@@ -464,4 +479,4 @@ flink_test: java java_test mock_flink_fs
 	$(MAKE) run_flink_test
 
 run_flink_test:
-	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp "$(MAIN_CLASSES):$(TEST_CLASSES):$(JAVA_TESTCLASSPATH):target/*" org.rocksdb.test.RocksJunitRunner $(FLINK_TESTS)
+	$(JAVA_CMD) $(JAVA_ARGS) -Djava.library.path=target -cp "$(MAIN_CLASSES):$(TEST_CLASSES):$(JAVA_TESTCLASSPATH):target/*" org.forstdb.test.RocksJunitRunner $(FLINK_TESTS)

@@ -24,18 +24,14 @@ class DBImplReadOnly : public DBImpl {
   virtual ~DBImplReadOnly();
 
   // Implementations of the DB interface
-  using DB::Get;
-  virtual Status Get(const ReadOptions& options,
-                     ColumnFamilyHandle* column_family, const Slice& key,
-                     PinnableSlice* value) override;
-  Status Get(const ReadOptions& options, ColumnFamilyHandle* column_family,
-             const Slice& key, PinnableSlice* value,
-             std::string* timestamp) override;
+  using DBImpl::GetImpl;
+  Status GetImpl(const ReadOptions& options, const Slice& key,
+                 GetImplOptions& get_impl_options) override;
 
   // TODO: Implement ReadOnly MultiGet?
 
   using DBImpl::NewIterator;
-  virtual Iterator* NewIterator(const ReadOptions&,
+  virtual Iterator* NewIterator(const ReadOptions& _read_options,
                                 ColumnFamilyHandle* column_family) override;
 
   virtual Status NewIterators(
@@ -55,6 +51,10 @@ class DBImplReadOnly : public DBImpl {
                    ColumnFamilyHandle* /* column_family */,
                    const Slice& /* key */,
                    const WideColumns& /* columns */) override {
+    return Status::NotSupported("Not supported operation in read only mode.");
+  }
+  Status PutEntity(const WriteOptions& /* options */, const Slice& /* key */,
+                   const AttributeGroups& /* attribute_groups */) override {
     return Status::NotSupported("Not supported operation in read only mode.");
   }
 
@@ -179,4 +179,3 @@ class DBImplReadOnly : public DBImpl {
   friend class DB;
 };
 }  // namespace ROCKSDB_NAMESPACE
-

@@ -16,6 +16,8 @@
 
 #include "db/blob/blob_index.h"
 #include "db/memtable.h"
+#include "db/wide/wide_column_serialization.h"
+#include "db/wide/wide_columns_helper.h"
 #include "db/write_batch_internal.h"
 #include "options/cf_options.h"
 #include "port/port.h"
@@ -36,6 +38,7 @@
 #include "table/table_reader.h"
 #include "util/compression.h"
 #include "util/random.h"
+#include "util/udt_util.h"
 
 namespace ROCKSDB_NAMESPACE {
 
@@ -68,6 +71,7 @@ extern const uint64_t kBlockBasedTableMagicNumber;
 extern const uint64_t kLegacyBlockBasedTableMagicNumber;
 extern const uint64_t kPlainTableMagicNumber;
 extern const uint64_t kLegacyPlainTableMagicNumber;
+extern const uint64_t kCuckooTableMagicNumber;
 
 const char* testFileName = "test_file_name";
 
@@ -109,8 +113,7 @@ Status SstFileDumper::GetTableReader(const std::string& file_path) {
     uint64_t prefetch_off = file_size - prefetch_size;
     IOOptions opts;
     s = prefetch_buffer.Prefetch(opts, file_.get(), prefetch_off,
-                                 static_cast<size_t>(prefetch_size),
-                                 Env::IO_TOTAL /* rate_limiter_priority */);
+                                 static_cast<size_t>(prefetch_size));
 
     s = ReadFooterFromFile(opts, file_.get(), *fs, &prefetch_buffer, file_size,
                            &footer);
@@ -121,8 +124,14 @@ Status SstFileDumper::GetTableReader(const std::string& file_path) {
 
   if (s.ok()) {
     if (magic_number == kPlainTableMagicNumber ||
-        magic_number == kLegacyPlainTableMagicNumber) {
+        magic_number == kLegacyPlainTableMagicNumber ||
+        magic_number == kCuckooTableMagicNumber) {
       soptions_.use_mmap_reads = true;
+
+      if (magic_number == kCuckooTableMagicNumber) {
+        fopts = soptions_;
+        fopts.temperature = file_temp_;
+      }
 
       fs->NewRandomAccessFile(file_path, fopts, &file, nullptr);
       file_.reset(new RandomAccessFileReader(std::move(file), file_path));
@@ -424,6 +433,13 @@ Status SstFileDumper::SetTableOptionsByMagicNumber(
     if (!silent_) {
       fprintf(stdout, "Sst file format: plain table\n");
     }
+  } else if (table_magic_number == kCuckooTableMagicNumber) {
+    ioptions_.allow_mmap_reads = true;
+
+    options_.table_factory.reset(NewCuckooTableFactory());
+    if (!silent_) {
+      fprintf(stdout, "Sst file format: cuckoo table\n");
+    }
   } else {
     char error_msg_buffer[80];
     snprintf(error_msg_buffer, sizeof(error_msg_buffer) - 1,
@@ -457,10 +473,20 @@ Status SstFileDumper::ReadSequential(bool print_kv, uint64_t read_num,
       read_options_, moptions_.prefix_extractor.get(),
       /*arena=*/nullptr, /*skip_filters=*/false,
       TableReaderCaller::kSSTDumpTool);
+
+  const Comparator* ucmp = internal_comparator_.user_comparator();
+  size_t ts_sz = ucmp->timestamp_size();
+
+  Slice from_slice = from_key;
+  Slice to_slice = to_key;
+  std::string from_key_buf, to_key_buf;
+  auto [from, to] = MaybeAddTimestampsToRange(
+      has_from ? &from_slice : nullptr, has_to ? &to_slice : nullptr, ts_sz,
+      &from_key_buf, &to_key_buf);
   uint64_t i = 0;
-  if (has_from) {
+  if (from.has_value()) {
     InternalKey ikey;
-    ikey.SetMinPossibleForUserKey(from_key);
+    ikey.SetMinPossibleForUserKey(from.value());
     iter->Seek(ikey.Encode());
   } else {
     iter->SeekToFirst();
@@ -469,7 +495,9 @@ Status SstFileDumper::ReadSequential(bool print_kv, uint64_t read_num,
     Slice key = iter->key();
     Slice value = iter->value();
     ++i;
-    if (read_num > 0 && i > read_num) break;
+    if (read_num > 0 && i > read_num) {
+      break;
+    }
 
     ParsedInternalKey ikey;
     Status pik_status = ParseInternalKey(key, &ikey, true /* log_err_key */);
@@ -484,15 +512,29 @@ Status SstFileDumper::ReadSequential(bool print_kv, uint64_t read_num,
     }
 
     // If end marker was specified, we stop before it
-    if (has_to && BytewiseComparator()->Compare(ikey.user_key, to_key) >= 0) {
+    if (to.has_value() && ucmp->Compare(ikey.user_key, to.value()) >= 0) {
       break;
     }
 
     if (print_kv) {
       if (!decode_blob_index_ || ikey.type != kTypeBlobIndex) {
-        fprintf(stdout, "%s => %s\n",
-                ikey.DebugString(true, output_hex_).c_str(),
-                value.ToString(output_hex_).c_str());
+        if (ikey.type == kTypeWideColumnEntity) {
+          std::ostringstream oss;
+          const Status s = WideColumnsHelper::DumpSliceAsWideColumns(
+              iter->value(), oss, output_hex_);
+          if (!s.ok()) {
+            fprintf(stderr, "%s => error deserializing wide columns\n",
+                    ikey.DebugString(true, output_hex_).c_str());
+            continue;
+          }
+          fprintf(stdout, "%s => %s\n",
+                  ikey.DebugString(true, output_hex_).c_str(),
+                  oss.str().c_str());
+        } else {
+          fprintf(stdout, "%s => %s\n",
+                  ikey.DebugString(true, output_hex_).c_str(),
+                  value.ToString(output_hex_).c_str());
+        }
       } else {
         BlobIndex blob_index;
 

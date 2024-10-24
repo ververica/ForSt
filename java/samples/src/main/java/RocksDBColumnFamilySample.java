@@ -3,7 +3,7 @@
 //  COPYING file in the root directory) and Apache 2.0 License
 //  (found in the LICENSE.Apache file in the root directory).
 
-import org.rocksdb.*;
+import org.forstdb.*;
 
 import java.util.ArrayList;
 import java.util.List;

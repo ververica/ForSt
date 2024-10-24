@@ -208,8 +208,11 @@ enum Tickers : uint32_t {
 
   // DEPRECATED / unused (see NUMBER_BLOCK_COMPRESSION_*)
   NUMBER_BLOCK_NOT_COMPRESSED,
+
+  // Tickers that record cumulative time.
   MERGE_OPERATION_TOTAL_TIME,
   FILTER_OPERATION_TOTAL_TIME,
+  COMPACTION_CPU_TOTAL_TIME,
 
   // Row cache.
   ROW_CACHE_HIT,
@@ -511,6 +514,29 @@ enum Tickers : uint32_t {
   // compressed SST blocks from storage.
   BYTES_DECOMPRESSED_TO,
 
+  // Number of times readahead is trimmed during scans when
+  // ReadOptions.auto_readahead_size is set.
+  READAHEAD_TRIMMED,
+
+  // Number of FIFO compactions that drop files based on different reasons
+  FIFO_MAX_SIZE_COMPACTIONS,
+  FIFO_TTL_COMPACTIONS,
+
+  // Number of bytes prefetched during user initiated scan
+  PREFETCH_BYTES,
+
+  // Number of prefetched bytes that were actually useful
+  PREFETCH_BYTES_USEFUL,
+
+  // Number of FS reads avoided due to scan prefetching
+  PREFETCH_HITS,
+
+  // Compressed secondary cache related stats
+  COMPRESSED_SECONDARY_CACHE_DUMMY_HITS,
+  COMPRESSED_SECONDARY_CACHE_HITS,
+  COMPRESSED_SECONDARY_CACHE_PROMOTIONS,
+  COMPRESSED_SECONDARY_CACHE_PROMOTION_SKIPS,
+
   TICKER_ENUM_MAX
 };
 
@@ -555,6 +581,13 @@ enum Histograms : uint32_t {
   FILE_READ_FLUSH_MICROS,
   FILE_READ_COMPACTION_MICROS,
   FILE_READ_DB_OPEN_MICROS,
+  // The following `FILE_READ_*` require stats level greater than
+  // `StatsLevel::kExceptDetailedTimers`
+  FILE_READ_GET_MICROS,
+  FILE_READ_MULTIGET_MICROS,
+  FILE_READ_DB_ITERATOR_MICROS,
+  FILE_READ_VERIFY_DB_CHECKSUM_MICROS,
+  FILE_READ_VERIFY_FILE_CHECKSUMS_MICROS,
 
   // The number of subcompactions actually scheduled during a compaction
   NUM_SUBCOMPACTIONS_SCHEDULED,

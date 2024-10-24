@@ -50,12 +50,12 @@ DEFINE_SYNC_AND_ASYNC(void, BlockBasedTable::RetrieveMultipleBlocks)
       }
 
       // XXX: use_cache=true means double cache query?
-      statuses[idx_in_batch] =
-          RetrieveBlock(nullptr, options, handle, uncompression_dict,
-                        &results[idx_in_batch].As<Block_kData>(),
-                        mget_iter->get_context, /* lookup_context */ nullptr,
-                        /* for_compaction */ false, /* use_cache */ true,
-                        /* async_read */ false);
+      statuses[idx_in_batch] = RetrieveBlock(
+          nullptr, options, handle, uncompression_dict,
+          &results[idx_in_batch].As<Block_kData>(), mget_iter->get_context,
+          /* lookup_context */ nullptr,
+          /* for_compaction */ false, /* use_cache */ true,
+          /* async_read */ false, /* use_block_cache_for_lookup */ true);
     }
     assert(idx_in_batch == handles->size());
     CO_RETURN;
@@ -144,7 +144,7 @@ DEFINE_SYNC_AND_ASYNC(void, BlockBasedTable::RetrieveMultipleBlocks)
       if (file->use_direct_io()) {
 #endif  // WITH_COROUTINES
         s = file->MultiRead(opts, &read_reqs[0], read_reqs.size(),
-                            &direct_io_buf, options.rate_limiter_priority);
+                            &direct_io_buf);
 #if defined(WITH_COROUTINES)
       } else {
         co_await batch->context()->reader().MultiReadAsync(
@@ -222,9 +222,8 @@ DEFINE_SYNC_AND_ASYNC(void, BlockBasedTable::RetrieveMultipleBlocks)
         // begin address of each read request, we need to add the offset
         // in each read request. Checksum is stored in the block trailer,
         // beyond the payload size.
-        s = VerifyBlockChecksum(footer.checksum_type(), data + req_offset,
-                                handle.size(), rep_->file->file_name(),
-                                handle.offset());
+        s = VerifyBlockChecksum(footer, data + req_offset, handle.size(),
+                                rep_->file->file_name(), handle.offset());
         TEST_SYNC_POINT_CALLBACK("RetrieveMultipleBlocks:VerifyChecksum", &s);
       }
     } else if (!use_shared_buffer) {
@@ -270,7 +269,7 @@ DEFINE_SYNC_AND_ASYNC(void, BlockBasedTable::RetrieveMultipleBlocks)
             nullptr, options, handle, uncompression_dict,
             /*for_compaction=*/false, block_entry, mget_iter->get_context,
             /*lookup_context=*/nullptr, &serialized_block,
-            /*async_read=*/false);
+            /*async_read=*/false, /*use_block_cache_for_lookup=*/true);
 
         // block_entry value could be null if no block cache is present, i.e
         // BlockBasedTableOptions::no_block_cache is true and no compressed
@@ -403,6 +402,7 @@ DEFINE_SYNC_AND_ASYNC(void, BlockBasedTable::MultiGet)
         BCI block_cache{rep_->table_options.block_cache.get()};
         std::array<BCI::TypedAsyncLookupHandle, MultiGetContext::MAX_BATCH_SIZE>
             async_handles;
+        BlockCreateContext create_ctx = rep_->create_context;
         std::array<CacheKey, MultiGetContext::MAX_BATCH_SIZE> cache_keys;
         size_t cache_lookup_count = 0;
 
@@ -449,6 +449,9 @@ DEFINE_SYNC_AND_ASYNC(void, BlockBasedTable::MultiGet)
             sst_file_range.SkipKey(miter);
             continue;
           }
+          create_ctx.dict = uncompression_dict.GetValue()
+                                ? uncompression_dict.GetValue()
+                                : &UncompressionDict::GetEmptyDict();
 
           if (v.handle.offset() == prev_offset) {
             // This key can reuse the previous block (later on).
@@ -476,7 +479,7 @@ DEFINE_SYNC_AND_ASYNC(void, BlockBasedTable::MultiGet)
                 GetCacheKey(rep_->base_cache_key, v.handle);
             async_handle.key = cache_keys[cache_lookup_count].AsSlice();
             // NB: StartAsyncLookupFull populates async_handle.helper
-            async_handle.create_context = &rep_->create_context;
+            async_handle.create_context = &create_ctx;
             async_handle.priority = GetCachePriority<Block_kData>();
             async_handle.stats = rep_->ioptions.statistics.get();
 
@@ -629,7 +632,8 @@ DEFINE_SYNC_AND_ASYNC(void, BlockBasedTable::MultiGet)
               read_options, iiter->value().handle, &next_biter,
               BlockType::kData, get_context, lookup_data_block_context,
               /* prefetch_buffer= */ nullptr, /* for_compaction = */ false,
-              /*async_read = */ false, tmp_s);
+              /*async_read = */ false, tmp_s,
+              /* use_block_cache_for_lookup = */ true);
           biter = &next_biter;
           reusing_prev_block = false;
           later_reused = false;
