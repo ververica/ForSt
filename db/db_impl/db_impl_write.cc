@@ -30,7 +30,7 @@ Status DBImpl::Put(const WriteOptions& o, ColumnFamilyHandle* column_family,
 
 Status DBImpl::Put(const WriteOptions& o, ColumnFamilyHandle* column_family,
                    const Slice& key, const Slice& ts, const Slice& val) {
-  const Status s = FailIfTsMismatchCf(column_family, ts, /*ts_for_read=*/false);
+  const Status s = FailIfTsMismatchCf(column_family, ts);
   if (!s.ok()) {
     return s;
   }
@@ -46,6 +46,17 @@ Status DBImpl::PutEntity(const WriteOptions& options,
   }
 
   return DB::PutEntity(options, column_family, key, columns);
+}
+
+Status DBImpl::PutEntity(const WriteOptions& options, const Slice& key,
+                         const AttributeGroups& attribute_groups) {
+  for (const AttributeGroup& ag : attribute_groups) {
+    const Status s = FailIfCfHasTs(ag.column_family());
+    if (!s.ok()) {
+      return s;
+    }
+  }
+  return DB::PutEntity(options, key, attribute_groups);
 }
 
 Status DBImpl::Merge(const WriteOptions& o, ColumnFamilyHandle* column_family,
@@ -64,7 +75,7 @@ Status DBImpl::Merge(const WriteOptions& o, ColumnFamilyHandle* column_family,
 
 Status DBImpl::Merge(const WriteOptions& o, ColumnFamilyHandle* column_family,
                      const Slice& key, const Slice& ts, const Slice& val) {
-  const Status s = FailIfTsMismatchCf(column_family, ts, /*ts_for_read=*/false);
+  const Status s = FailIfTsMismatchCf(column_family, ts);
   if (!s.ok()) {
     return s;
   }
@@ -83,7 +94,7 @@ Status DBImpl::Delete(const WriteOptions& write_options,
 Status DBImpl::Delete(const WriteOptions& write_options,
                       ColumnFamilyHandle* column_family, const Slice& key,
                       const Slice& ts) {
-  const Status s = FailIfTsMismatchCf(column_family, ts, /*ts_for_read=*/false);
+  const Status s = FailIfTsMismatchCf(column_family, ts);
   if (!s.ok()) {
     return s;
   }
@@ -103,7 +114,7 @@ Status DBImpl::SingleDelete(const WriteOptions& write_options,
 Status DBImpl::SingleDelete(const WriteOptions& write_options,
                             ColumnFamilyHandle* column_family, const Slice& key,
                             const Slice& ts) {
-  const Status s = FailIfTsMismatchCf(column_family, ts, /*ts_for_read=*/false);
+  const Status s = FailIfTsMismatchCf(column_family, ts);
   if (!s.ok()) {
     return s;
   }
@@ -124,7 +135,7 @@ Status DBImpl::DeleteRange(const WriteOptions& write_options,
                            ColumnFamilyHandle* column_family,
                            const Slice& begin_key, const Slice& end_key,
                            const Slice& ts) {
-  const Status s = FailIfTsMismatchCf(column_family, ts, /*ts_for_read=*/false);
+  const Status s = FailIfTsMismatchCf(column_family, ts);
   if (!s.ok()) {
     return s;
   }
@@ -403,17 +414,6 @@ Status DBImpl::WriteImpl(const WriteOptions& write_options,
   IOStatus io_s;
   Status pre_release_cb_status;
   if (status.ok()) {
-    // TODO: this use of operator bool on `tracer_` can avoid unnecessary lock
-    // grabs but does not seem thread-safe.
-    if (tracer_) {
-      InstrumentedMutexLock lock(&trace_mutex_);
-      if (tracer_ && tracer_->IsWriteOrderPreserved()) {
-        for (auto* writer : write_group) {
-          // TODO: maybe handle the tracing status?
-          tracer_->Write(writer->batch).PermitUncheckedError();
-        }
-      }
-    }
     // Rules for when we can update the memtable concurrently
     // 1. supported by memtable
     // 2. Puts are not okay if inplace_update_support
@@ -437,12 +437,26 @@ Status DBImpl::WriteImpl(const WriteOptions& write_options,
         valid_batches += writer->batch_cnt;
         if (writer->ShouldWriteToMemtable()) {
           total_count += WriteBatchInternal::Count(writer->batch);
+          total_byte_size = WriteBatchInternal::AppendedByteSize(
+              total_byte_size, WriteBatchInternal::ByteSize(writer->batch));
           parallel = parallel && !writer->batch->HasMerge();
         }
-        total_byte_size = WriteBatchInternal::AppendedByteSize(
-            total_byte_size, WriteBatchInternal::ByteSize(writer->batch));
         if (writer->pre_release_callback) {
           pre_release_callback_cnt++;
+        }
+      }
+    }
+    // TODO: this use of operator bool on `tracer_` can avoid unnecessary lock
+    // grabs but does not seem thread-safe.
+    if (tracer_) {
+      InstrumentedMutexLock lock(&trace_mutex_);
+      if (tracer_ && tracer_->IsWriteOrderPreserved()) {
+        for (auto* writer : write_group) {
+          if (writer->CallbackFailed()) {
+            continue;
+          }
+          // TODO: maybe handle the tracing status?
+          tracer_->Write(writer->batch).PermitUncheckedError();
         }
       }
     }
@@ -706,11 +720,11 @@ Status DBImpl::PipelinedWriteImpl(const WriteOptions& write_options,
           if (writer->ShouldWriteToMemtable()) {
             writer->sequence = next_sequence;
             size_t count = WriteBatchInternal::Count(writer->batch);
+            total_byte_size = WriteBatchInternal::AppendedByteSize(
+                total_byte_size, WriteBatchInternal::ByteSize(writer->batch));
             next_sequence += count;
             total_count += count;
           }
-          total_byte_size = WriteBatchInternal::AppendedByteSize(
-              total_byte_size, WriteBatchInternal::ByteSize(writer->batch));
         }
       }
       if (w.disable_wal) {
@@ -1811,11 +1825,9 @@ uint64_t DBImpl::GetMaxTotalWalSize() const {
 Status DBImpl::DelayWrite(uint64_t num_bytes, WriteThread& write_thread,
                           const WriteOptions& write_options) {
   mutex_.AssertHeld();
-  uint64_t time_delayed = 0;
+  uint64_t start_time = 0;
   bool delayed = false;
   {
-    StopWatch sw(immutable_db_options_.clock, stats_, WRITE_STALL,
-                 Histograms::HISTOGRAM_ENUM_MAX, &time_delayed);
     // To avoid parallel timed delays (bad throttling), only support them
     // on the primary write queue.
     uint64_t delay;
@@ -1827,6 +1839,8 @@ Status DBImpl::DelayWrite(uint64_t num_bytes, WriteThread& write_thread,
       delay = 0;
     }
     TEST_SYNC_POINT("DBImpl::DelayWrite:Start");
+    start_time = immutable_db_options_.clock->NowMicros();
+
     if (delay > 0) {
       if (write_options.no_slowdown) {
         return Status::Incomplete("Write stall");
@@ -1843,7 +1857,7 @@ Status DBImpl::DelayWrite(uint64_t num_bytes, WriteThread& write_thread,
       // (slightly longer because WriteController minimum delay is 1ms, in
       // case of sleep imprecision, rounding, etc.)
       const uint64_t kDelayInterval = 1001;
-      uint64_t stall_end = sw.start_time() + delay;
+      uint64_t stall_end = start_time + delay;
       while (write_controller_.NeedsDelay()) {
         if (immutable_db_options_.clock->NowMicros() >= stall_end) {
           // We already delayed this write `delay` microseconds
@@ -1858,11 +1872,11 @@ Status DBImpl::DelayWrite(uint64_t num_bytes, WriteThread& write_thread,
       write_thread.EndWriteStall();
     }
 
-    // Don't wait if there's a background error, even if its a soft error. We
-    // might wait here indefinitely as the background compaction may never
-    // finish successfully, resulting in the stall condition lasting
-    // indefinitely
-    while (error_handler_.GetBGError().ok() && write_controller_.IsStopped() &&
+    // Don't wait if there's a background error that is not pending recovery
+    // since recovery might never be attempted.
+    while ((error_handler_.GetBGError().ok() ||
+            error_handler_.IsRecoveryInProgress()) &&
+           write_controller_.IsStopped() &&
            !shutting_down_.load(std::memory_order_relaxed)) {
       if (write_options.no_slowdown) {
         return Status::Incomplete("Write stall");
@@ -1884,9 +1898,11 @@ Status DBImpl::DelayWrite(uint64_t num_bytes, WriteThread& write_thread,
   }
   assert(!delayed || !write_options.no_slowdown);
   if (delayed) {
+    auto time_delayed = immutable_db_options_.clock->NowMicros() - start_time;
     default_cf_internal_stats_->AddDBStats(
         InternalStats::kIntStatsWriteStallMicros, time_delayed);
     RecordTick(stats_, STALL_MICROS, time_delayed);
+    RecordInHistogram(stats_, WRITE_STALL, time_delayed);
   }
 
   // If DB is not in read-only mode and write_controller is not stopping
@@ -1953,9 +1969,13 @@ Status DBImpl::ThrottleLowPriWritesIfNeeded(const WriteOptions& write_options,
       // a chance to run. Now we guarantee we are still slowly making
       // progress.
       PERF_TIMER_GUARD(write_delay_time);
-      write_controller_.low_pri_rate_limiter()->Request(
-          my_batch->GetDataSize(), Env::IO_HIGH, nullptr /* stats */,
-          RateLimiter::OpType::kWrite);
+      auto data_size = my_batch->GetDataSize();
+      while (data_size > 0) {
+        size_t allowed = write_controller_.low_pri_rate_limiter()->RequestToken(
+            data_size, 0 /* alignment */, Env::IO_HIGH, nullptr /* stats */,
+            RateLimiter::OpType::kWrite);
+        data_size -= allowed;
+      }
     }
   }
   return Status::OK();
@@ -2375,6 +2395,22 @@ Status DB::PutEntity(const WriteOptions& options,
     return s;
   }
 
+  return Write(options, &batch);
+}
+
+Status DB::PutEntity(const WriteOptions& options, const Slice& key,
+                     const AttributeGroups& attribute_groups) {
+  ColumnFamilyHandle* default_cf = DefaultColumnFamily();
+  assert(default_cf);
+  const Comparator* const default_cf_ucmp = default_cf->GetComparator();
+  assert(default_cf_ucmp);
+  WriteBatch batch(0 /* reserved_bytes */, 0 /* max_bytes */,
+                   options.protection_bytes_per_key,
+                   default_cf_ucmp->timestamp_size());
+  const Status s = batch.PutEntity(key, attribute_groups);
+  if (!s.ok()) {
+    return s;
+  }
   return Write(options, &batch);
 }
 

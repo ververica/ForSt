@@ -12,6 +12,7 @@ LIB_SOURCES =                                                   \
   cache/secondary_cache.cc                                      \
   cache/secondary_cache_adapter.cc                              \
   cache/sharded_cache.cc                                        \
+  cache/tiered_secondary_cache.cc				\
   db/arena_wrapped_db_iter.cc                                   \
   db/blob/blob_contents.cc                                      \
   db/blob/blob_fetcher.cc                                       \
@@ -94,6 +95,7 @@ LIB_SOURCES =                                                   \
   db/wal_manager.cc                                             \
   db/wide/wide_column_serialization.cc                          \
   db/wide/wide_columns.cc                                       \
+  db/wide/wide_columns_helper.cc                                \
   db/write_batch.cc                                             \
   db/write_batch_base.cc                                        \
   db/write_controller.cc                                        \
@@ -158,6 +160,7 @@ LIB_SOURCES =                                                   \
   options/configurable.cc                                       \
   options/customizable.cc                                       \
   options/db_options.cc                                         \
+  options/offpeak_time_info.cc                                  \
   options/options.cc                                            \
   options/options_helper.cc                                     \
   options/options_parser.cc                                     \
@@ -383,6 +386,7 @@ STRESS_LIB_SOURCES =                                            \
   db_stress_tool/db_stress_stat.cc                             \
   db_stress_tool/db_stress_test_base.cc                        \
   db_stress_tool/db_stress_tool.cc                             \
+  db_stress_tool/db_stress_wide_merge_operator.cc              \
   db_stress_tool/expected_state.cc                             \
   db_stress_tool/expected_value.cc                             \
   db_stress_tool/no_batched_ops_stress.cc                      \
@@ -401,6 +405,7 @@ TEST_LIB_SOURCES =                                              \
 FOLLY_SOURCES =                                                 \
   $(FOLLY_DIR)/folly/container/detail/F14Table.cpp              \
   $(FOLLY_DIR)/folly/detail/Futex.cpp                           \
+  $(FOLLY_DIR)/folly/lang/Exception.cpp                         \
   $(FOLLY_DIR)/folly/lang/SafeAssert.cpp                        \
   $(FOLLY_DIR)/folly/lang/ToAscii.cpp                           \
   $(FOLLY_DIR)/folly/ScopeGuard.cpp                             \
@@ -436,8 +441,9 @@ BENCH_MAIN_SOURCES =                                                    \
 TEST_MAIN_SOURCES =                                                     \
   cache/cache_test.cc                                                   \
   cache/cache_reservation_manager_test.cc                               \
-  cache/lru_cache_test.cc                                               \
   cache/compressed_secondary_cache_test.cc                              \
+  cache/lru_cache_test.cc                                               \
+  cache/tiered_secondary_cache_test.cc					\
   db/blob/blob_counting_iterator_test.cc                                \
   db/blob/blob_file_addition_test.cc                                    \
   db/blob/blob_file_builder_test.cc                                     \
@@ -533,6 +539,7 @@ TEST_MAIN_SOURCES =                                                     \
   db/wal_manager_test.cc                                                \
   db/wide/db_wide_basic_test.cc                                         \
   db/wide/wide_column_serialization_test.cc                             \
+  db/wide/wide_columns_helper_test.cc                                   \
   db/write_batch_test.cc                                                \
   db/write_callback_test.cc                                             \
   db/write_controller_test.cc                                           \
@@ -642,86 +649,88 @@ MICROBENCH_SOURCES =                                          \
   microbench/db_basic_bench.cc                                  \
 
 JNI_NATIVE_SOURCES =                                          \
-  java/rocksjni/backupenginejni.cc                            \
-  java/rocksjni/backup_engine_options.cc                      \
-  java/rocksjni/checkpoint.cc                                 \
-  java/rocksjni/clock_cache.cc                                \
-  java/rocksjni/cache.cc                                      \
-  java/rocksjni/columnfamilyhandle.cc                         \
-  java/rocksjni/compact_range_options.cc                      \
-  java/rocksjni/compaction_filter.cc                          \
-  java/rocksjni/compaction_filter_factory.cc                  \
-  java/rocksjni/compaction_filter_factory_jnicallback.cc      \
-  java/rocksjni/compaction_job_info.cc                        \
-  java/rocksjni/compaction_job_stats.cc                       \
-  java/rocksjni/compaction_options.cc                         \
-  java/rocksjni/compaction_options_fifo.cc                    \
-  java/rocksjni/compaction_options_universal.cc               \
-  java/rocksjni/comparator.cc                                 \
-  java/rocksjni/comparatorjnicallback.cc                      \
-  java/rocksjni/compression_options.cc                        \
-  java/rocksjni/concurrent_task_limiter.cc                    \
-  java/rocksjni/config_options.cc                             \
-  java/rocksjni/export_import_files_metadatajni.cc            \
-  java/rocksjni/env.cc                                        \
-  java/rocksjni/env_flink.cc                                  \
-  java/rocksjni/env_flink_test_suite.cc 					  \
-  java/rocksjni/env_options.cc                                \
-  java/rocksjni/event_listener.cc                             \
-  java/rocksjni/event_listener_jnicallback.cc                 \
-  java/rocksjni/flink_compactionfilterjni.cc                  \
-  java/rocksjni/import_column_family_options.cc               \
-  java/rocksjni/ingest_external_file_options.cc               \
-  java/rocksjni/filter.cc                                     \
-  java/rocksjni/iterator.cc                                   \
-  java/rocksjni/jnicallback.cc                                \
-  java/rocksjni/loggerjnicallback.cc                          \
-  java/rocksjni/lru_cache.cc                                  \
-  java/rocksjni/memtablejni.cc                                \
-  java/rocksjni/memory_util.cc                                \
-  java/rocksjni/merge_operator.cc                             \
-  java/rocksjni/native_comparator_wrapper_test.cc             \
-  java/rocksjni/optimistic_transaction_db.cc                  \
-  java/rocksjni/optimistic_transaction_options.cc             \
-  java/rocksjni/options.cc                                    \
-  java/rocksjni/options_util.cc                               \
-  java/rocksjni/persistent_cache.cc                           \
-  java/rocksjni/ratelimiterjni.cc                             \
-  java/rocksjni/remove_emptyvalue_compactionfilterjni.cc      \
-  java/rocksjni/cassandra_compactionfilterjni.cc              \
-  java/rocksjni/cassandra_value_operator.cc                   \
-  java/rocksjni/restorejni.cc                                 \
-  java/rocksjni/rocks_callback_object.cc                      \
-  java/rocksjni/rocksjni.cc                                   \
-  java/rocksjni/rocksdb_exception_test.cc                     \
-  java/rocksjni/slice.cc                                      \
-  java/rocksjni/snapshot.cc                                   \
-  java/rocksjni/sst_file_manager.cc                           \
-  java/rocksjni/sst_file_writerjni.cc                         \
-  java/rocksjni/sst_file_readerjni.cc                         \
-  java/rocksjni/sst_file_reader_iterator.cc                   \
-  java/rocksjni/sst_partitioner.cc                            \
-  java/rocksjni/statistics.cc                                 \
-  java/rocksjni/statisticsjni.cc                              \
-  java/rocksjni/table.cc                                      \
-  java/rocksjni/table_filter.cc                               \
-  java/rocksjni/table_filter_jnicallback.cc                   \
-  java/rocksjni/thread_status.cc                              \
-  java/rocksjni/trace_writer.cc                               \
-  java/rocksjni/trace_writer_jnicallback.cc                   \
-  java/rocksjni/transaction.cc                                \
-  java/rocksjni/transaction_db.cc                             \
-  java/rocksjni/transaction_options.cc                        \
-  java/rocksjni/transaction_db_options.cc                     \
-  java/rocksjni/transaction_log.cc                            \
-  java/rocksjni/transaction_notifier.cc                       \
-  java/rocksjni/transaction_notifier_jnicallback.cc           \
-  java/rocksjni/ttl.cc                                        \
-  java/rocksjni/testable_event_listener.cc                    \
-  java/rocksjni/wal_filter.cc                                 \
-  java/rocksjni/wal_filter_jnicallback.cc                     \
-  java/rocksjni/write_batch.cc                                \
-  java/rocksjni/writebatchhandlerjnicallback.cc               \
-  java/rocksjni/write_batch_test.cc                           \
-  java/rocksjni/write_batch_with_index.cc                     \
-  java/rocksjni/write_buffer_manager.cc
+  java/forstjni/backupenginejni.cc                            \
+  java/forstjni/backup_engine_options.cc                      \
+  java/forstjni/checkpoint.cc                                 \
+  java/forstjni/clock_cache.cc                                \
+  java/forstjni/cache.cc                                      \
+  java/forstjni/columnfamilyhandle.cc                         \
+  java/forstjni/compact_range_options.cc                      \
+  java/forstjni/compaction_filter.cc                          \
+  java/forstjni/compaction_filter_factory.cc                  \
+  java/forstjni/compaction_filter_factory_jnicallback.cc      \
+  java/forstjni/compaction_job_info.cc                        \
+  java/forstjni/compaction_job_stats.cc                       \
+  java/forstjni/compaction_options.cc                         \
+  java/forstjni/compaction_options_fifo.cc                    \
+  java/forstjni/compaction_options_universal.cc               \
+  java/forstjni/comparator.cc                                 \
+  java/forstjni/comparatorjnicallback.cc                      \
+  java/forstjni/compression_options.cc                        \
+  java/forstjni/concurrent_task_limiter.cc                    \
+  java/forstjni/config_options.cc                             \
+  java/forstjni/export_import_files_metadatajni.cc            \
+  java/forstjni/env.cc                                        \
+  java/forstjni/env_flink.cc                                  \
+  java/forstjni/env_flink_test_suite.cc 					  \
+  java/forstjni/env_options.cc                                \
+  java/forstjni/event_listener.cc                             \
+  java/forstjni/event_listener_jnicallback.cc                 \
+  java/forstjni/import_column_family_options.cc               \
+  java/forstjni/flink_compactionfilterjni.cc                  \
+  java/forstjni/ingest_external_file_options.cc               \
+  java/forstjni/filter.cc                                     \
+  java/forstjni/hyper_clock_cache.cc                          \
+  java/forstjni/iterator.cc                                   \
+  java/forstjni/jni_perf_context.cc                           \
+  java/forstjni/jnicallback.cc                                \
+  java/forstjni/loggerjnicallback.cc                          \
+  java/forstjni/lru_cache.cc                                  \
+  java/forstjni/memtablejni.cc                                \
+  java/forstjni/memory_util.cc                                \
+  java/forstjni/merge_operator.cc                             \
+  java/forstjni/native_comparator_wrapper_test.cc             \
+  java/forstjni/optimistic_transaction_db.cc                  \
+  java/forstjni/optimistic_transaction_options.cc             \
+  java/forstjni/options.cc                                    \
+  java/forstjni/options_util.cc                               \
+  java/forstjni/persistent_cache.cc                           \
+  java/forstjni/ratelimiterjni.cc                             \
+  java/forstjni/remove_emptyvalue_compactionfilterjni.cc      \
+  java/forstjni/cassandra_compactionfilterjni.cc              \
+  java/forstjni/cassandra_value_operator.cc                   \
+  java/forstjni/restorejni.cc                                 \
+  java/forstjni/rocks_callback_object.cc                      \
+  java/forstjni/rocksjni.cc                                   \
+  java/forstjni/rocksdb_exception_test.cc                     \
+  java/forstjni/slice.cc                                      \
+  java/forstjni/snapshot.cc                                   \
+  java/forstjni/sst_file_manager.cc                           \
+  java/forstjni/sst_file_writerjni.cc                         \
+  java/forstjni/sst_file_readerjni.cc                         \
+  java/forstjni/sst_file_reader_iterator.cc                   \
+  java/forstjni/sst_partitioner.cc                            \
+  java/forstjni/statistics.cc                                 \
+  java/forstjni/statisticsjni.cc                              \
+  java/forstjni/table.cc                                      \
+  java/forstjni/table_filter.cc                               \
+  java/forstjni/table_filter_jnicallback.cc                   \
+  java/forstjni/thread_status.cc                              \
+  java/forstjni/trace_writer.cc                               \
+  java/forstjni/trace_writer_jnicallback.cc                   \
+  java/forstjni/transaction.cc                                \
+  java/forstjni/transaction_db.cc                             \
+  java/forstjni/transaction_options.cc                        \
+  java/forstjni/transaction_db_options.cc                     \
+  java/forstjni/transaction_log.cc                            \
+  java/forstjni/transaction_notifier.cc                       \
+  java/forstjni/transaction_notifier_jnicallback.cc           \
+  java/forstjni/ttl.cc                                        \
+  java/forstjni/testable_event_listener.cc                    \
+  java/forstjni/wal_filter.cc                                 \
+  java/forstjni/wal_filter_jnicallback.cc                     \
+  java/forstjni/write_batch.cc                                \
+  java/forstjni/writebatchhandlerjnicallback.cc               \
+  java/forstjni/write_batch_test.cc                           \
+  java/forstjni/write_batch_with_index.cc                     \
+  java/forstjni/write_buffer_manager.cc

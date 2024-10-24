@@ -131,8 +131,8 @@ void Deinit() { delete filter; }
 
 TEST(FlinkStateTtlTest, CheckStateTypeEnumOrder) {  // NOLINT
   // if the order changes it also needs to be adjusted in Java client:
-  // in org.rocksdb.FlinkCompactionFilter
-  // and in org.rocksdb.FlinkCompactionFilterTest
+  // in org.forstdb.FlinkCompactionFilter
+  // and in org.forstdb.FlinkCompactionFilterTest
   EXPECT_EQ(DISABLED, 0);
   EXPECT_EQ(VALUE, 1);
   EXPECT_EQ(LIST, 2);

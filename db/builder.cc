@@ -203,6 +203,7 @@ Status BuildTable(
         blob_file_builder.get(), ioptions.allow_data_in_errors,
         ioptions.enforce_single_del_contracts,
         /*manual_compaction_canceled=*/kManualCompactionCanceledFalse,
+        true /* must_count_input_entries */,
         /*compaction=*/nullptr, compaction_filter.get(),
         /*shutting_down=*/nullptr, db_options.info_log, full_history_ts_low);
 
@@ -286,18 +287,19 @@ Status BuildTable(
     TEST_SYNC_POINT("BuildTable:BeforeFinishBuildTable");
     const bool empty = builder->IsEmpty();
     if (num_input_entries != nullptr) {
+      assert(c_iter.HasNumInputEntryScanned());
       *num_input_entries =
-          c_iter.num_input_entry_scanned() + num_unfragmented_tombstones;
+          c_iter.NumInputEntryScanned() + num_unfragmented_tombstones;
     }
     if (!s.ok() || empty) {
       builder->Abandon();
     } else {
-      std::string seqno_time_mapping_str;
+      std::string seqno_to_time_mapping_str;
       seqno_to_time_mapping.Encode(
-          seqno_time_mapping_str, meta->fd.smallest_seqno,
+          seqno_to_time_mapping_str, meta->fd.smallest_seqno,
           meta->fd.largest_seqno, meta->file_creation_time);
       builder->SetSeqnoTimeTableProperties(
-          seqno_time_mapping_str,
+          seqno_to_time_mapping_str,
           ioptions.compaction_style == CompactionStyle::kCompactionStyleFIFO
               ? meta->file_creation_time
               : meta->oldest_ancester_time);

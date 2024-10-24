@@ -217,6 +217,8 @@ Status ExternalSstFileIngestionJob::Prepare(
         std::string requested_checksum_func_name;
         // TODO: rate limit file reads for checksum calculation during file
         // ingestion.
+        // TODO: plumb Env::IOActivity
+        ReadOptions ro;
         IOStatus io_s = GenerateOneFileChecksum(
             fs_.get(), files_to_ingest_[i].internal_file_path,
             db_options_.file_checksum_gen_factory.get(),
@@ -224,8 +226,8 @@ Status ExternalSstFileIngestionJob::Prepare(
             &generated_checksum_func_name,
             ingestion_options_.verify_checksums_readahead_size,
             db_options_.allow_mmap_reads, io_tracer_,
-            db_options_.rate_limiter.get(),
-            Env::IO_TOTAL /* rate_limiter_priority */);
+            db_options_.rate_limiter.get(), ro, db_options_.stats,
+            db_options_.clock);
         if (!io_s.ok()) {
           status = io_s;
           ROCKS_LOG_WARN(db_options_.info_log,
@@ -348,7 +350,7 @@ Status ExternalSstFileIngestionJob::NeedsFlush(bool* flush_needed,
       std::string end_str;
       AppendUserKeyWithMaxTimestamp(
           &begin_str, file_to_ingest.smallest_internal_key.user_key(), ts_sz);
-      AppendKeyWithMinTimestamp(
+      AppendUserKeyWithMinTimestamp(
           &end_str, file_to_ingest.largest_internal_key.user_key(), ts_sz);
       keys.emplace_back(std::move(begin_str));
       keys.emplace_back(std::move(end_str));
@@ -767,8 +769,6 @@ Status ExternalSstFileIngestionJob::GetIngestedFileInfo(
   std::unique_ptr<InternalIterator> iter(table_reader->NewIterator(
       ro, sv->mutable_cf_options.prefix_extractor.get(), /*arena=*/nullptr,
       /*skip_filters=*/false, TableReaderCaller::kExternalSSTIngestion));
-  std::unique_ptr<InternalIterator> range_del_iter(
-      table_reader->NewRangeTombstoneIterator(ro));
 
   // Get first (smallest) and last (largest) key from file.
   file_to_ingest->smallest_internal_key =
@@ -790,8 +790,33 @@ Status ExternalSstFileIngestionJob::GetIngestedFileInfo(
     }
     file_to_ingest->smallest_internal_key.SetFrom(key);
 
-    iter->SeekToLast();
-    pik_status = ParseInternalKey(iter->key(), &key, allow_data_in_errors);
+    Slice largest;
+    if (strcmp(cfd_->ioptions()->table_factory->Name(), "PlainTable") == 0) {
+      // PlainTable iterator does not support SeekToLast().
+      largest = iter->key();
+      for (; iter->Valid(); iter->Next()) {
+        if (cfd_->internal_comparator().Compare(iter->key(), largest) > 0) {
+          largest = iter->key();
+        }
+      }
+      if (!iter->status().ok()) {
+        return iter->status();
+      }
+    } else {
+      iter->SeekToLast();
+      if (!iter->Valid()) {
+        if (iter->status().ok()) {
+          // The file contains at least 1 key since iter is valid after
+          // SeekToFirst().
+          return Status::Corruption("Can not find largest key in sst file");
+        } else {
+          return iter->status();
+        }
+      }
+      largest = iter->key();
+    }
+
+    pik_status = ParseInternalKey(largest, &key, allow_data_in_errors);
     if (!pik_status.ok()) {
       return Status::Corruption("Corrupted key in external file. ",
                                 pik_status.getState());
@@ -802,8 +827,12 @@ Status ExternalSstFileIngestionJob::GetIngestedFileInfo(
     file_to_ingest->largest_internal_key.SetFrom(key);
 
     bounds_set = true;
+  } else if (!iter->status().ok()) {
+    return iter->status();
   }
 
+  std::unique_ptr<InternalIterator> range_del_iter(
+      table_reader->NewRangeTombstoneIterator(ro));
   // We may need to adjust these key bounds, depending on whether any range
   // deletion tombstones extend past them.
   const Comparator* ucmp = cfd_->internal_comparator().user_comparator();
@@ -907,26 +936,6 @@ Status ExternalSstFileIngestionJob::AssignLevelAndSeqnoForIngestedFile(
         // this file a seqno to overwrite the existing keys in level `lvl`
         overlap_with_db = true;
         break;
-      }
-
-      if (compaction_style == kCompactionStyleUniversal && lvl != 0) {
-        const std::vector<FileMetaData*>& level_files =
-            vstorage->LevelFiles(lvl);
-        const SequenceNumber level_largest_seqno =
-            (*std::max_element(level_files.begin(), level_files.end(),
-                               [](FileMetaData* f1, FileMetaData* f2) {
-                                 return f1->fd.largest_seqno <
-                                        f2->fd.largest_seqno;
-                               }))
-                ->fd.largest_seqno;
-        // should only assign seqno to current level's largest seqno when
-        // the file fits
-        if (level_largest_seqno != 0 &&
-            IngestedFileFitInLevel(file_to_ingest, lvl)) {
-          *assigned_seqno = level_largest_seqno;
-        } else {
-          continue;
-        }
       }
     } else if (compaction_style == kCompactionStyleUniversal) {
       continue;
@@ -1058,13 +1067,15 @@ IOStatus ExternalSstFileIngestionJob::GenerateChecksumForIngestedFile(
   std::string file_checksum_func_name;
   std::string requested_checksum_func_name;
   // TODO: rate limit file reads for checksum calculation during file ingestion.
+  // TODO: plumb Env::IOActivity
+  ReadOptions ro;
   IOStatus io_s = GenerateOneFileChecksum(
       fs_.get(), file_to_ingest->internal_file_path,
       db_options_.file_checksum_gen_factory.get(), requested_checksum_func_name,
       &file_checksum, &file_checksum_func_name,
       ingestion_options_.verify_checksums_readahead_size,
       db_options_.allow_mmap_reads, io_tracer_, db_options_.rate_limiter.get(),
-      Env::IO_TOTAL /* rate_limiter_priority */);
+      ro, db_options_.stats, db_options_.clock);
   if (!io_s.ok()) {
     return io_s;
   }

@@ -38,6 +38,7 @@
 #include "db/compaction/compaction.h"
 #include "db/compaction/compaction_picker.h"
 #include "db/dbformat.h"
+#include "db/error_handler.h"
 #include "db/file_indexer.h"
 #include "db/log_reader.h"
 #include "db/range_del_aggregator.h"
@@ -53,6 +54,7 @@
 #endif
 #include "monitoring/instrumented_mutex.h"
 #include "options/db_options.h"
+#include "options/offpeak_time_info.h"
 #include "port/port.h"
 #include "rocksdb/env.h"
 #include "rocksdb/file_checksum.h"
@@ -132,8 +134,10 @@ class VersionStorageInfo {
                      CompactionStyle compaction_style,
                      VersionStorageInfo* src_vstorage,
                      bool _force_consistency_checks,
-                     EpochNumberRequirement epoch_number_requirement =
-                         EpochNumberRequirement::kMustPresent);
+                     EpochNumberRequirement epoch_number_requirement,
+                     SystemClock* clock,
+                     uint32_t bottommost_file_compaction_delay,
+                     OffpeakTimeOption offpeak_time_option);
   // No copying allowed
   VersionStorageInfo(const VersionStorageInfo&) = delete;
   void operator=(const VersionStorageInfo&) = delete;
@@ -227,7 +231,7 @@ class VersionStorageInfo {
   // eligible for compaction.
   //
   // REQUIRES: DB mutex held
-  void ComputeBottommostFilesMarkedForCompaction();
+  void ComputeBottommostFilesMarkedForCompaction(bool allow_ingest_behind);
 
   // This computes files_marked_for_forced_blob_gc_ and is called by
   // ComputeCompactionScore()
@@ -235,14 +239,16 @@ class VersionStorageInfo {
   // REQUIRES: DB mutex held
   void ComputeFilesMarkedForForcedBlobGC(
       double blob_garbage_collection_age_cutoff,
-      double blob_garbage_collection_force_threshold);
+      double blob_garbage_collection_force_threshold,
+      bool enable_blob_garbage_collection);
 
   bool level0_non_overlapping() const { return level0_non_overlapping_; }
 
   // Updates the oldest snapshot and related internal state, like the bottommost
   // files marked for compaction.
   // REQUIRES: DB mutex held
-  void UpdateOldestSnapshot(SequenceNumber oldest_snapshot_seqnum);
+  void UpdateOldestSnapshot(SequenceNumber oldest_snapshot_seqnum,
+                            bool allow_ingest_behind);
 
   int MaxInputLevel() const;
   int MaxOutputLevel(bool allow_ingest_behind) const;
@@ -335,7 +341,15 @@ class VersionStorageInfo {
       EpochNumberRequirement epoch_number_requirement) {
     epoch_number_requirement_ = epoch_number_requirement;
   }
-  void RecoverEpochNumbers(ColumnFamilyData* cfd);
+  // Ensure all files have epoch number set.
+  // If there is a file missing epoch number, all files' epoch number will be
+  // reset according to CF's epoch number. Otherwise, the CF will be updated
+  // with the max epoch number of the files.
+  //
+  // @param restart_epoch This CF's epoch number will be reset to start from 0.
+  // @param force Force resetting all files' epoch number.
+  void RecoverEpochNumbers(ColumnFamilyData* cfd, bool restart_epoch = true,
+                           bool force = false);
 
   class FileLocation {
    public:
@@ -482,6 +496,12 @@ class VersionStorageInfo {
 
   void TEST_AddFileMarkedForPeriodicCompaction(int level, FileMetaData* f) {
     files_marked_for_periodic_compaction_.emplace_back(level, f);
+  }
+
+  // REQUIRES: PrepareForVersionAppend has been called
+  const autovector<std::pair<int, FileMetaData*>>& BottommostFiles() const {
+    assert(finalized_);
+    return bottommost_files_;
   }
 
   // REQUIRES: ComputeCompactionScore has been called
@@ -748,6 +768,11 @@ class VersionStorageInfo {
   // target sizes.
   uint64_t estimated_compaction_needed_bytes_;
 
+  // Used for computing bottommost files marked for compaction and checking for
+  // offpeak time.
+  SystemClock* clock_;
+  uint32_t bottommost_file_compaction_delay_;
+
   bool finalized_;
 
   // If set to true, we will run consistency checks even if RocksDB
@@ -755,6 +780,8 @@ class VersionStorageInfo {
   bool force_consistency_checks_;
 
   EpochNumberRequirement epoch_number_requirement_;
+
+  OffpeakTimeOption offpeak_time_option_;
 
   friend class Version;
   friend class VersionSet;
@@ -1139,7 +1166,9 @@ class VersionSet {
              WriteController* write_controller,
              BlockCacheTracer* const block_cache_tracer,
              const std::shared_ptr<IOTracer>& io_tracer,
-             const std::string& db_id, const std::string& db_session_id);
+             const std::string& db_id, const std::string& db_session_id,
+             const std::string& daily_offpeak_time_utc,
+             ErrorHandler* const error_handler);
   // No copying allowed
   VersionSet(const VersionSet&) = delete;
   void operator=(const VersionSet&) = delete;
@@ -1169,7 +1198,8 @@ class VersionSet {
       const MutableCFOptions& mutable_cf_options,
       const ReadOptions& read_options, VersionEdit* edit, InstrumentedMutex* mu,
       FSDirectory* dir_contains_current_file, bool new_descriptor_log = false,
-      const ColumnFamilyOptions* column_family_options = nullptr) {
+      const ColumnFamilyOptions* column_family_options = nullptr,
+      const std::function<void(const Status&)>& manifest_wcb = {}) {
     autovector<ColumnFamilyData*> cfds;
     cfds.emplace_back(column_family_data);
     autovector<const MutableCFOptions*> mutable_cf_options_list;
@@ -1180,7 +1210,7 @@ class VersionSet {
     edit_lists.emplace_back(edit_list);
     return LogAndApply(cfds, mutable_cf_options_list, read_options, edit_lists,
                        mu, dir_contains_current_file, new_descriptor_log,
-                       column_family_options);
+                       column_family_options, {manifest_wcb});
   }
   // The batch version. If edit_list.size() > 1, caller must ensure that
   // no edit in the list column family add or drop
@@ -1493,6 +1523,14 @@ class VersionSet {
         new_options.writable_file_max_buffer_size;
   }
 
+  // TODO - Consider updating together when file options change in SetDBOptions
+  const OffpeakTimeOption& offpeak_time_option() {
+    return offpeak_time_option_;
+  }
+  void ChangeOffpeakTimeOption(const std::string& daily_offpeak_time_utc) {
+    offpeak_time_option_.SetFromOffpeakTimeString(daily_offpeak_time_utc);
+  }
+
   const ImmutableDBOptions* db_options() const { return db_options_; }
 
   static uint64_t GetNumLiveVersions(Version* dummy_versions);
@@ -1521,9 +1559,6 @@ class VersionSet {
   }
 
  protected:
-  using VersionBuilderMap =
-      UnorderedMap<uint32_t, std::unique_ptr<BaseReferencedVersionBuilder>>;
-
   struct ManifestWriter;
 
   friend class Version;
@@ -1645,6 +1680,12 @@ class VersionSet {
   std::shared_ptr<IOTracer> io_tracer_;
 
   std::string db_session_id_;
+
+  // Off-peak time option used for compaction scoring
+  OffpeakTimeOption offpeak_time_option_;
+
+  // Pointer to the DB's ErrorHandler.
+  ErrorHandler* const error_handler_;
 
  private:
   // REQUIRES db mutex at beginning. may release and re-acquire db mutex

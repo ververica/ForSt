@@ -133,8 +133,8 @@ class VersionEditHandler : public VersionEditHandlerBase {
   bool HasMissingFiles() const;
 
   void GetDbId(std::string* db_id) const {
-    if (db_id && version_edit_params_.has_db_id_) {
-      *db_id = version_edit_params_.db_id_;
+    if (db_id && version_edit_params_.HasDbId()) {
+      *db_id = version_edit_params_.GetDbId();
     }
   }
 
@@ -202,6 +202,7 @@ class VersionEditHandler : public VersionEditHandlerBase {
   bool initialized_;
   std::unique_ptr<std::unordered_map<uint32_t, std::string>> cf_to_cmp_names_;
   EpochNumberRequirement epoch_number_requirement_;
+  std::unordered_set<uint32_t> cfds_to_mark_no_udt_;
 
  private:
   Status ExtractInfoFromVersionEdit(ColumnFamilyData* cfd,

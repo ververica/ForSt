@@ -117,13 +117,16 @@ CompactionFilter::Decision FlinkCompactionFilter::FilterV2(
 
   const char* data = existing_value.data();
 
-  Debug(logger_.get(),
+  if (logger_ && logger_->GetInfoLogLevel() <= InfoLogLevel::DEBUG_LEVEL) {
+    Debug(
+        logger_.get(),
         "Call FlinkCompactionFilter::FilterV2 - Key: %s, Data: %s, Value type: "
         "%d, "
         "State type: %d, TTL: %" PRId64 " ms, timestamp_offset: %zu",
         key.ToString().c_str(), existing_value.ToString(true).c_str(),
         value_type, config_cached_->state_type_, config_cached_->ttl_,
         config_cached_->timestamp_offset_);
+  }
 
   // too short value to have timestamp at all
   const bool tooShortValue =

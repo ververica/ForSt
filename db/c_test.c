@@ -3,15 +3,14 @@
    found in the LICENSE file. See the AUTHORS file for names of contributors. */
 // Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 
-#include <stdio.h>
+#include "rocksdb/c.h"
 
 #include <assert.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-
-#include "rocksdb/c.h"
 #ifndef OS_WIN
 #include <unistd.h>
 #endif
@@ -376,6 +375,11 @@ static rocksdb_t* CheckCompaction(rocksdb_t* db, rocksdb_options_t* options,
 
   // Force compaction
   rocksdb_compact_range(db, NULL, 0, NULL, 0);
+  rocksdb_wait_for_compact_options_t* wco;
+  wco = rocksdb_wait_for_compact_options_create();
+  rocksdb_wait_for_compact(db, wco, &err);
+  CheckNoError(err);
+  rocksdb_wait_for_compact_options_destroy(wco);
   // should have filtered bar, but not foo
   CheckGet(db, roptions, "foo", "foovalue");
   CheckGet(db, roptions, "bar", NULL);
@@ -706,6 +710,11 @@ int main(int argc, char** argv) {
                               rocksdb_no_compression, rocksdb_no_compression};
   rocksdb_options_set_compression_per_level(options, compression_levels, 4);
   rate_limiter = rocksdb_ratelimiter_create(1000 * 1024 * 1024, 100 * 1000, 10);
+  rocksdb_options_set_ratelimiter(options, rate_limiter);
+  rocksdb_ratelimiter_destroy(rate_limiter);
+
+  rate_limiter =
+      rocksdb_ratelimiter_create_auto_tuned(1000 * 1024 * 1024, 100 * 1000, 10);
   rocksdb_options_set_ratelimiter(options, rate_limiter);
   rocksdb_ratelimiter_destroy(rate_limiter);
 
@@ -1470,10 +1479,20 @@ int main(int argc, char** argv) {
     CheckCondition(cflen == 2);
     rocksdb_list_column_families_destroy(column_fams, cflen);
 
-    rocksdb_options_t* cf_options = rocksdb_options_create();
+    rocksdb_options_t* cf_options_1 = rocksdb_options_create();
+    rocksdb_options_t* cf_options_2 = rocksdb_options_create();
+
+    // use dbpathname2 as the cf_path for "cf1"
+    rocksdb_dbpath_t* dbpath2;
+    char dbpathname2[200];
+    snprintf(dbpathname2, sizeof(dbpathname2), "%s/rocksdb_c_test-%d-dbpath2",
+             GetTempDir(), ((int)geteuid()));
+    dbpath2 = rocksdb_dbpath_create(dbpathname2, 1024 * 1024);
+    const rocksdb_dbpath_t* cf_paths[1] = {dbpath2};
+    rocksdb_options_set_cf_paths(cf_options_2, cf_paths, 1);
 
     const char* cf_names[2] = {"default", "cf1"};
-    const rocksdb_options_t* cf_opts[2] = {cf_options, cf_options};
+    const rocksdb_options_t* cf_opts[2] = {cf_options_1, cf_options_2};
     rocksdb_column_family_handle_t* handles[2];
 
     LoadAndCheckLatestOptions(dbname, env, false, cache, NULL, 2, cf_names,
@@ -1501,6 +1520,37 @@ int main(int argc, char** argv) {
     rocksdb_flushoptions_t* flush_options = rocksdb_flushoptions_create();
     rocksdb_flushoptions_set_wait(flush_options, 1);
     rocksdb_flush_cf(db, flush_options, handles[1], &err);
+
+    // make sure all files in "cf1" are under the specified cf path
+    {
+      rocksdb_column_family_metadata_t* cf_meta =
+          rocksdb_get_column_family_metadata_cf(db, handles[1]);
+      size_t cf_file_count = rocksdb_column_family_metadata_get_size(cf_meta);
+      assert(cf_file_count > 0);
+      size_t level_count =
+          rocksdb_column_family_metadata_get_level_count(cf_meta);
+      assert(level_count > 0);
+      for (size_t l = 0; l < level_count; ++l) {
+        rocksdb_level_metadata_t* level_meta =
+            rocksdb_column_family_metadata_get_level_metadata(cf_meta, l);
+        assert(level_meta);
+
+        size_t file_count = rocksdb_level_metadata_get_file_count(level_meta);
+        for (size_t f = 0; f < file_count; ++f) {
+          rocksdb_sst_file_metadata_t* file_meta =
+              rocksdb_level_metadata_get_sst_file_metadata(level_meta, f);
+          assert(file_meta);
+          char* file_path = rocksdb_sst_file_metadata_get_directory(file_meta);
+          assert(strcmp(file_path, dbpathname2) == 0);
+          Free(&file_path);
+          rocksdb_sst_file_metadata_destroy(file_meta);
+        }
+        rocksdb_level_metadata_destroy(level_meta);
+      }
+
+      rocksdb_column_family_metadata_destroy(cf_meta);
+    }
+
     CheckNoError(err) rocksdb_flushoptions_destroy(flush_options);
 
     CheckGetCF(db, roptions, handles[1], "foo", "hello");
@@ -1664,7 +1714,9 @@ int main(int argc, char** argv) {
     }
     rocksdb_destroy_db(options, dbname, &err);
     rocksdb_options_destroy(db_options);
-    rocksdb_options_destroy(cf_options);
+    rocksdb_options_destroy(cf_options_1);
+    rocksdb_options_destroy(cf_options_2);
+    rocksdb_dbpath_destroy(dbpath2);
   }
 
   StartPhase("prefix");
@@ -1869,6 +1921,10 @@ int main(int argc, char** argv) {
     CheckCondition(2.0 ==
                    rocksdb_options_get_max_bytes_for_level_multiplier(o));
 
+    rocksdb_options_set_periodic_compaction_seconds(o, 100000);
+    CheckCondition(100000 ==
+                   rocksdb_options_get_periodic_compaction_seconds(o));
+
     rocksdb_options_set_skip_stats_update_on_db_open(o, 1);
     CheckCondition(1 == rocksdb_options_get_skip_stats_update_on_db_open(o));
 
@@ -2060,6 +2116,15 @@ int main(int argc, char** argv) {
     rocksdb_options_set_experimental_mempurge_threshold(o, 29.0);
     CheckCondition(29.0 ==
                    rocksdb_options_get_experimental_mempurge_threshold(o));
+
+    CheckCondition(rocksdb_statistics_level_disable_all ==
+                   rocksdb_options_get_statistics_level(o));
+    rocksdb_options_enable_statistics(o);
+    CheckCondition(rocksdb_statistics_level_disable_all !=
+                   rocksdb_options_get_statistics_level(o));
+    rocksdb_options_set_statistics_level(o, rocksdb_statistics_level_all);
+    CheckCondition(rocksdb_statistics_level_all ==
+                   rocksdb_options_get_statistics_level(o));
 
     /* Blob Options */
     rocksdb_options_set_enable_blob_files(o, 1);
@@ -2289,6 +2354,12 @@ int main(int argc, char** argv) {
                    rocksdb_options_get_max_bytes_for_level_multiplier(copy));
     CheckCondition(2.0 ==
                    rocksdb_options_get_max_bytes_for_level_multiplier(o));
+
+    rocksdb_options_set_periodic_compaction_seconds(copy, 8000);
+    CheckCondition(8000 ==
+                   rocksdb_options_get_periodic_compaction_seconds(copy));
+    CheckCondition(100000 ==
+                   rocksdb_options_get_periodic_compaction_seconds(o));
 
     rocksdb_options_set_skip_stats_update_on_db_open(copy, 0);
     CheckCondition(0 == rocksdb_options_get_skip_stats_update_on_db_open(copy));
@@ -3122,12 +3193,12 @@ int main(int argc, char** argv) {
     CheckTxnDBGetCF(txn_db, roptions, cfh, "cf_foo", NULL);
     CheckTxnDBPinGetCF(txn_db, roptions, cfh, "cf_foo", NULL);
 
-
-    //memory usage
+    // memory usage
     rocksdb_t* base_db = rocksdb_transactiondb_get_base_db(txn_db);
     rocksdb_memory_consumers_t* consumers = rocksdb_memory_consumers_create();
     rocksdb_memory_consumers_add_db(consumers, base_db);
-    rocksdb_memory_usage_t* usage = rocksdb_approximate_memory_usage_create(consumers, &err);
+    rocksdb_memory_usage_t* usage =
+        rocksdb_approximate_memory_usage_create(consumers, &err);
     CheckNoError(err);
     rocksdb_approximate_memory_usage_destroy(usage);
     rocksdb_memory_consumers_destroy(consumers);
@@ -3612,6 +3683,126 @@ int main(int argc, char** argv) {
 
     rocksdb_iter_destroy(iter);
     rocksdb_readoptions_destroy(ropts);
+  }
+
+  StartPhase("statistics");
+  {
+    const uint32_t BYTES_WRITTEN_TICKER = 40;
+    const uint32_t DB_WRITE_HIST = 1;
+
+    rocksdb_statistics_histogram_data_t* hist =
+        rocksdb_statistics_histogram_data_create();
+    {
+      // zero by default
+      CheckCondition(0.0 == rocksdb_statistics_histogram_data_get_median(hist));
+      CheckCondition(0.0 == rocksdb_statistics_histogram_data_get_p95(hist));
+      CheckCondition(0.0 == rocksdb_statistics_histogram_data_get_p99(hist));
+      CheckCondition(0.0 ==
+                     rocksdb_statistics_histogram_data_get_average(hist));
+      CheckCondition(0.0 ==
+                     rocksdb_statistics_histogram_data_get_std_dev(hist));
+      CheckCondition(0.0 == rocksdb_statistics_histogram_data_get_max(hist));
+      CheckCondition(0 == rocksdb_statistics_histogram_data_get_count(hist));
+      CheckCondition(0 == rocksdb_statistics_histogram_data_get_sum(hist));
+      CheckCondition(0.0 == rocksdb_statistics_histogram_data_get_min(hist));
+    }
+
+    rocksdb_close(db);
+    rocksdb_destroy_db(options, dbname, &err);
+    CheckNoError(err);
+
+    rocksdb_options_enable_statistics(options);
+    rocksdb_options_set_statistics_level(options, rocksdb_statistics_level_all);
+
+    db = rocksdb_open(options, dbname, &err);
+    CheckNoError(err);
+
+    CheckCondition(0 == rocksdb_options_statistics_get_ticker_count(
+                            options, BYTES_WRITTEN_TICKER));
+    rocksdb_options_statistics_get_histogram_data(options, DB_WRITE_HIST, hist);
+    CheckCondition(0.0 == rocksdb_statistics_histogram_data_get_median(hist));
+    CheckCondition(0.0 == rocksdb_statistics_histogram_data_get_p95(hist));
+    CheckCondition(0.0 == rocksdb_statistics_histogram_data_get_p99(hist));
+    CheckCondition(0.0 == rocksdb_statistics_histogram_data_get_average(hist));
+    CheckCondition(0.0 == rocksdb_statistics_histogram_data_get_std_dev(hist));
+    CheckCondition(0.0 == rocksdb_statistics_histogram_data_get_max(hist));
+    CheckCondition(0 == rocksdb_statistics_histogram_data_get_count(hist));
+    CheckCondition(0 == rocksdb_statistics_histogram_data_get_sum(hist));
+
+    int i;
+    for (i = 0; i < 10; ++i) {
+      char key = '0' + (char)i;
+      rocksdb_put(db, woptions, &key, 1, "", 1, &err);
+      CheckNoError(err);
+    }
+    CheckCondition(0 != rocksdb_options_statistics_get_ticker_count(
+                            options, BYTES_WRITTEN_TICKER));
+    rocksdb_options_statistics_get_histogram_data(options, DB_WRITE_HIST, hist);
+    CheckCondition(0.0 != rocksdb_statistics_histogram_data_get_median(hist));
+    CheckCondition(0.0 != rocksdb_statistics_histogram_data_get_p95(hist));
+    CheckCondition(0.0 != rocksdb_statistics_histogram_data_get_p99(hist));
+    CheckCondition(0.0 != rocksdb_statistics_histogram_data_get_average(hist));
+    CheckCondition(0.0 != rocksdb_statistics_histogram_data_get_std_dev(hist));
+    CheckCondition(0.0 != rocksdb_statistics_histogram_data_get_max(hist));
+    CheckCondition(0 != rocksdb_statistics_histogram_data_get_count(hist));
+    CheckCondition(0 != rocksdb_statistics_histogram_data_get_sum(hist));
+
+    rocksdb_statistics_histogram_data_destroy(hist);
+  }
+
+  StartPhase("wait_for_compact_options");
+  {
+    rocksdb_wait_for_compact_options_t* wco;
+    wco = rocksdb_wait_for_compact_options_create();
+
+    rocksdb_wait_for_compact_options_set_abort_on_pause(wco, 1);
+    CheckCondition(1 ==
+                   rocksdb_wait_for_compact_options_get_abort_on_pause(wco));
+
+    rocksdb_wait_for_compact_options_set_flush(wco, 1);
+    CheckCondition(1 == rocksdb_wait_for_compact_options_get_flush(wco));
+
+    rocksdb_wait_for_compact_options_set_close_db(wco, 1);
+    CheckCondition(1 == rocksdb_wait_for_compact_options_get_close_db(wco));
+
+    rocksdb_wait_for_compact_options_set_timeout(wco, 342);
+    CheckCondition(342 == rocksdb_wait_for_compact_options_get_timeout(wco));
+
+    rocksdb_wait_for_compact_options_destroy(wco);
+  }
+  StartPhase("wait_for_compact");
+  {
+    rocksdb_wait_for_compact_options_t* wco;
+    wco = rocksdb_wait_for_compact_options_create();
+    rocksdb_wait_for_compact_options_set_flush(wco, 1);
+
+    rocksdb_wait_for_compact(db, wco, &err);
+    CheckNoError(err);
+    rocksdb_wait_for_compact_options_destroy(wco);
+  }
+
+  StartPhase("write_buffer_manager");
+  {
+    rocksdb_cache_t* lru;
+    lru = rocksdb_cache_create_lru(100);
+
+    rocksdb_write_buffer_manager_t* write_buffer_manager;
+    write_buffer_manager =
+        rocksdb_write_buffer_manager_create_with_cache(200, lru, false);
+
+    CheckCondition(true ==
+                   rocksdb_write_buffer_manager_enabled(write_buffer_manager));
+    CheckCondition(true == rocksdb_write_buffer_manager_cost_to_cache(
+                               write_buffer_manager));
+    CheckCondition(
+        200 == rocksdb_write_buffer_manager_buffer_size(write_buffer_manager));
+
+    rocksdb_write_buffer_manager_set_buffer_size(write_buffer_manager, 300);
+    CheckCondition(
+        300 == rocksdb_write_buffer_manager_buffer_size(write_buffer_manager));
+
+    rocksdb_write_buffer_manager_destroy(write_buffer_manager);
+    rocksdb_cache_destroy(lru);
   }
 
   StartPhase("cancel_all_background_work");

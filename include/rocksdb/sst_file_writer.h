@@ -13,6 +13,7 @@
 #include "rocksdb/options.h"
 #include "rocksdb/table_properties.h"
 #include "rocksdb/types.h"
+#include "rocksdb/wide_columns.h"
 
 #if defined(__GNUC__) || defined(__clang__)
 #define ROCKSDB_DEPRECATED_FUNC __attribute__((__deprecated__))
@@ -45,7 +46,7 @@ struct ExternalSstFileInfo {
                       const std::string& _smallest_key,
                       const std::string& _largest_key,
                       SequenceNumber _sequence_number, uint64_t _file_size,
-                      int32_t _num_entries, int32_t _version)
+                      uint64_t _num_entries, int32_t _version)
       : file_path(_file_path),
         smallest_key(_smallest_key),
         largest_key(_largest_key),
@@ -127,6 +128,10 @@ class SstFileWriter {
   // REQUIRES: timestamp's size is equal to what is expected by the comparator.
   Status Put(const Slice& user_key, const Slice& timestamp, const Slice& value);
 
+  // Add a PutEntity (key with the wide-column entity defined by "columns") to
+  // the currently opened file
+  Status PutEntity(const Slice& user_key, const WideColumns& columns);
+
   // Add a Merge key with value to currently opened file
   // REQUIRES: user_key is after any previously added point (Put/Merge/Delete)
   //           key according to the comparator.
@@ -186,4 +191,3 @@ class SstFileWriter {
   std::unique_ptr<Rep> rep_;
 };
 }  // namespace ROCKSDB_NAMESPACE
-

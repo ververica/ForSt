@@ -100,6 +100,7 @@ bool VersionEdit::EncodeTo(std::string* dst,
     PutLengthPrefixedSlice(dst, db_id_);
   }
   if (has_comparator_) {
+    assert(has_persist_user_defined_timestamps_);
     PutVarint32(dst, kComparator);
     PutLengthPrefixedSlice(dst, comparator_);
   }
@@ -308,6 +309,15 @@ bool VersionEdit::EncodeTo(std::string* dst,
     PutVarint32(dst, kFullHistoryTsLow);
     PutLengthPrefixedSlice(dst, full_history_ts_low_);
   }
+
+  if (HasPersistUserDefinedTimestamps()) {
+    // persist_user_defined_timestamps flag should be logged in the same
+    // VersionEdit as the user comparator name.
+    assert(has_comparator_);
+    PutVarint32(dst, kPersistUserDefinedTimestamps);
+    char p = static_cast<char>(persist_user_defined_timestamps_);
+    PutLengthPrefixedSlice(dst, Slice(&p, 1));
+  }
   return true;
 }
 
@@ -474,7 +484,6 @@ void VersionEdit::EncodeFileBoundaries(std::string* dst,
   StripTimestampFromInternalKey(&largest_buf, meta.largest.Encode(), ts_sz);
   PutLengthPrefixedSlice(dst, smallest_buf);
   PutLengthPrefixedSlice(dst, largest_buf);
-  return;
 };
 
 Status VersionEdit::DecodeFrom(const Slice& src) {
@@ -777,6 +786,17 @@ Status VersionEdit::DecodeFrom(const Slice& src) {
         }
         break;
 
+      case kPersistUserDefinedTimestamps:
+        if (!GetLengthPrefixedSlice(&input, &str)) {
+          msg = "persist_user_defined_timestamps";
+        } else if (str.size() != 1) {
+          msg = "persist_user_defined_timestamps field wrong size";
+        } else {
+          persist_user_defined_timestamps_ = (str[0] == 1);
+          has_persist_user_defined_timestamps_ = true;
+        }
+        break;
+
       default:
         if (tag & kTagSafeIgnoreMask) {
           // Tag from future which can be safely ignored.
@@ -818,6 +838,10 @@ std::string VersionEdit::DebugString(bool hex_key) const {
   if (has_comparator_) {
     r.append("\n  Comparator: ");
     r.append(comparator_);
+  }
+  if (has_persist_user_defined_timestamps_) {
+    r.append("\n  PersistUserDefinedTimestamps: ");
+    r.append(persist_user_defined_timestamps_ ? "true" : "false");
   }
   if (has_log_number_) {
     r.append("\n  LogNumber: ");

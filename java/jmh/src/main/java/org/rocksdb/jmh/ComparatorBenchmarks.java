@@ -4,20 +4,20 @@
  *  COPYING file in the root directory) and Apache 2.0 License
  *  (found in the LICENSE.Apache file in the root directory).
  */
-package org.rocksdb.jmh;
+package org.forstdb.jmh;
 
 import org.openjdk.jmh.annotations.*;
-import org.rocksdb.*;
-import org.rocksdb.util.BytewiseComparator;
-import org.rocksdb.util.FileUtils;
-import org.rocksdb.util.ReverseBytewiseComparator;
+import org.forstdb.*;
+import org.forstdb.util.BytewiseComparator;
+import org.forstdb.util.FileUtils;
+import org.forstdb.util.ReverseBytewiseComparator;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.rocksdb.util.KVUtils.ba;
+import static org.forstdb.util.KVUtils.ba;
 
 @State(Scope.Benchmark)
 public class ComparatorBenchmarks {
