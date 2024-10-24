@@ -39,9 +39,9 @@ tmp_origin=_tmp_origin
 set -e
 git remote remove $tmp_origin 2>/dev/null || true
 if [ "$USE_SSH" ]; then
-  git remote add $tmp_origin "git@github.com:facebook/rocksdb.git"
+  git remote add $tmp_origin "git@github.com:ververica/ForSt.git"
 else
-  git remote add $tmp_origin "https://github.com/facebook/rocksdb.git"
+  git remote add $tmp_origin "https://github.com/ververica/ForSt.git"
 fi
 git fetch $tmp_origin
 

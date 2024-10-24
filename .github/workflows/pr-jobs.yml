@@ -31,7 +31,7 @@ jobs:
       - uses: "./.github/actions/pre-steps"
       - uses: "./.github/actions/install-gflags"
       - run: echo "JAVA_HOME=${JAVA_HOME}"
-      - run: DISABLE_WARNING_AS_ERROR=1 make V=1 J=8 -j8 check
+      - run: DISABLE_WARNING_AS_ERROR=1 DISABLE_PERF_CONTEXT=0 make V=1 J=8 -j8 check
       - uses: "./.github/actions/post-steps"
   # ======================== Linux No Test Runs ======================= #
   build-linux-release:
@@ -83,7 +83,7 @@ jobs:
           which java && java -version
           which javac && javac -version
       - name: Test RocksDBJava
-        run: scl enable devtoolset-7 'DISABLE_WARNING_AS_ERROR=1 make V=1 J=8 -j8 jtest'
+        run: scl enable devtoolset-7 'DISABLE_WARNING_AS_ERROR=1 DISABLE_PERF_CONTEXT=0 make V=1 J=8 -j8 jtest'
     # NOTE: post-steps skipped because of compatibility issues with docker image
   build-linux-java-static:
     runs-on: ubuntu-latest
@@ -148,7 +148,7 @@ jobs:
           which java && java -version
           which javac && javac -version
       - name: Test RocksDBJava
-        run: DISABLE_WARNING_AS_ERROR=1 make V=1 J=16 -j16 jtest
+        run: DISABLE_WARNING_AS_ERROR=1 DISABLE_PERF_CONTEXT=0 make V=1 J=16 -j16 jtest
       - uses: "./.github/actions/post-steps"
   build-macos-java-static:
     runs-on: macos-13

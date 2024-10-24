@@ -7743,7 +7743,7 @@ class ExportImportFilesMetaDataJni : public JavaClass {
     }
 
     jmethodID mid = env->GetMethodID(jclazz, "<init>",
-                                     "([B[Lorg/rocksdb/LiveFileMetaData;)V");
+                                     "([B[Lorg/forstdb/LiveFileMetaData;)V");
     if (mid == nullptr) {
       // exception thrown: NoSuchMethodException or OutOfMemoryError
       return nullptr;
@@ -7795,7 +7795,7 @@ class ExportImportFilesMetaDataJni : public JavaClass {
   }
 
   static jclass getJClass(JNIEnv* env) {
-    return JavaClass::getJClass(env, "org/rocksdb/ExportImportFilesMetaData");
+    return JavaClass::getJClass(env, "org/forstdb/ExportImportFilesMetaData");
   }
 };
 
@@ -8651,7 +8651,7 @@ class FlushJobInfoJni : public JavaClass {
   static jmethodID getConstructorMethodId(JNIEnv* env, jclass clazz) {
     return env->GetMethodID(clazz, "<init>",
                             "(JLjava/lang/String;Ljava/lang/String;JIZZJJLorg/"
-                            "rocksdb/TableProperties;B)V");
+                            "forstdb/TableProperties;B)V");
   }
 };
 

@@ -127,7 +127,7 @@ uncommitted_code=`git diff HEAD`
 if [ -z "$uncommitted_code" ]
 then
   # Attempt to get name of facebook/rocksdb.git remote.
-  [ "$FORMAT_REMOTE" ] || FORMAT_REMOTE="$(LC_ALL=POSIX LANG=POSIX git remote -v | grep 'facebook/rocksdb.git' | head -n 1 | cut -f 1)"
+  [ "$FORMAT_REMOTE" ] || FORMAT_REMOTE="$(LC_ALL=POSIX LANG=POSIX git remote -v | grep 'ververica/ForSt.git' | head -n 1 | cut -f 1)"
   # Fall back on 'origin' if that fails
   [ "$FORMAT_REMOTE" ] || FORMAT_REMOTE=origin
   # Use main branch from that remote
