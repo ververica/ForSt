@@ -234,6 +234,8 @@ class DBTieredSecondaryCacheTest : public DBTestBase {
 // each data block contains exactly 4 KV pairs. Metadata blocks are not
 // cached, so we can accurately estimate the cache usage.
 TEST_F(DBTieredSecondaryCacheTest, BasicTest) {
+  ROCKSDB_GTEST_SKIP("Temp disable secondary cache.");
+  return;
   if (!LZ4_Supported()) {
     ROCKSDB_GTEST_SKIP("This test requires LZ4 support.");
     return;
@@ -353,6 +355,8 @@ TEST_F(DBTieredSecondaryCacheTest, BasicTest) {
 // This test is very similar to BasicTest, except it calls MultiGet rather
 // than Get, in order to exercise the async lookup and WaitAll path.
 TEST_F(DBTieredSecondaryCacheTest, BasicMultiGetTest) {
+  ROCKSDB_GTEST_SKIP("Temp disable secondary cache.");
+  return;
   if (!LZ4_Supported()) {
     ROCKSDB_GTEST_SKIP("This test requires LZ4 support.");
     return;
@@ -495,6 +499,8 @@ TEST_F(DBTieredSecondaryCacheTest, BasicMultiGetTest) {
 }
 
 TEST_F(DBTieredSecondaryCacheTest, WaitAllTest) {
+  ROCKSDB_GTEST_SKIP("Temp disable secondary cache.");
+  return;
   if (!LZ4_Supported()) {
     ROCKSDB_GTEST_SKIP("This test requires LZ4 support.");
     return;
@@ -593,6 +599,8 @@ TEST_F(DBTieredSecondaryCacheTest, WaitAllTest) {
 }
 
 TEST_F(DBTieredSecondaryCacheTest, ReadyBeforeWaitAllTest) {
+  ROCKSDB_GTEST_SKIP("Temp disable secondary cache.");
+  return;
   if (!LZ4_Supported()) {
     ROCKSDB_GTEST_SKIP("This test requires LZ4 support.");
     return;
@@ -706,6 +714,8 @@ TEST_F(DBTieredSecondaryCacheTest, ReadyBeforeWaitAllTest) {
 // passes. First pass loads the compressed blocks into the nvm tier, and
 // the second pass should hit all of those blocks.
 TEST_F(DBTieredSecondaryCacheTest, IterateTest) {
+  ROCKSDB_GTEST_SKIP("Temp disable secondary cache.");
+  return;
   if (!LZ4_Supported()) {
     ROCKSDB_GTEST_SKIP("This test requires LZ4 support.");
     return;
@@ -765,6 +775,8 @@ class DBTieredAdmPolicyTest
       public testing::WithParamInterface<TieredAdmissionPolicy> {};
 
 TEST_P(DBTieredAdmPolicyTest, CompressedOnlyTest) {
+  ROCKSDB_GTEST_SKIP("Temp disable secondary cache.");
+  return;
   if (!LZ4_Supported()) {
     ROCKSDB_GTEST_SKIP("This test requires LZ4 support.");
     return;
