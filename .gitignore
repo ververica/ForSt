@@ -62,7 +62,7 @@ java/out
 java/target
 java/test-libs
 java/*.log
-java/include/org_rocksdb_*.h
+java/include/org_forstdb_*.h
 
 .idea/
 *.iml
@@ -98,3 +98,9 @@ cmake-build-*
 third-party/folly/
 .cache
 *.sublime-*
+
+lz4-*
+snappy-*
+bzip2-*
+zstd-*
+zlib-*
