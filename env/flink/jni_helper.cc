@@ -180,6 +180,13 @@ IOStatus JavaClassCache::Init() {
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FS_INPUT_STREAM_SKIP]
       .signature = "(J)J";
 
+  cached_java_methods_[CachedJavaMethod::JM_FLINK_FS_INPUT_STREAM_CLOSE]
+      .javaClassAndName = cached_java_classes_[JC_FLINK_FS_INPUT_STREAM];
+  cached_java_methods_[CachedJavaMethod::JM_FLINK_FS_INPUT_STREAM_CLOSE]
+      .methodName = "close";
+  cached_java_methods_[CachedJavaMethod::JM_FLINK_FS_INPUT_STREAM_CLOSE]
+      .signature = "()V";
+
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FS_OUTPUT_STREAM_WRITE]
       .javaClassAndName = cached_java_classes_[JC_FLINK_FS_OUTPUT_STREAM];
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FS_OUTPUT_STREAM_WRITE]

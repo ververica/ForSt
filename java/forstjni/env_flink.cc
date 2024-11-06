@@ -28,10 +28,11 @@
 /*
  * Class:     org_forstdb_FlinkEnv
  * Method:    createFlinkEnv
- * Signature: (Ljava/lang/String;)J
+ * Signature: (Ljava/lang/String;Ljava/lang/Object;)J
  */
 jlong Java_org_forstdb_FlinkEnv_createFlinkEnv(JNIEnv* env, jclass,
-                                               jstring base_path) {
+                                               jstring base_path,
+                                               jobject file_system_instance_) {
   jboolean has_exception = JNI_FALSE;
   auto path =
       ROCKSDB_NAMESPACE::JniUtil::copyStdString(env, base_path, &has_exception);
@@ -41,7 +42,8 @@ jlong Java_org_forstdb_FlinkEnv_createFlinkEnv(JNIEnv* env, jclass,
     return 0;
   }
   std::unique_ptr<ROCKSDB_NAMESPACE::Env> flink_env;
-  auto status = ROCKSDB_NAMESPACE::NewFlinkEnv(path, &flink_env);
+  auto status =
+      ROCKSDB_NAMESPACE::NewFlinkEnv(path, &flink_env, file_system_instance_);
   if (!status.ok()) {
     ROCKSDB_NAMESPACE::RocksDBExceptionJni::ThrowNew(env, status);
     return 0;

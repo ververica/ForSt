@@ -31,11 +31,11 @@ public class FlinkEnv extends Env {
    * @param basePath the base path string for the given Flink file system,
    * formatted as "{fs-schema-supported-by-flink}://xxx"
    */
-  public FlinkEnv(final String basePath) {
-    super(createFlinkEnv(basePath));
+  public FlinkEnv(final String basePath, final Object fileSystem) {
+    super(createFlinkEnv(basePath, fileSystem));
   }
 
-  private static native long createFlinkEnv(final String basePath);
+  private static native long createFlinkEnv(final String basePath, final Object fileSystem);
 
   @Override protected final native void disposeInternal(final long handle);
 }

@@ -174,6 +174,10 @@ class FlinkReadableFile : virtual public FSSequentialFile,
   ~FlinkReadableFile() override {
     JNIEnv* jniEnv = getJNIEnv();
     if (fs_data_input_stream_instance_ != nullptr) {
+      JavaClassCache::JavaMethodContext closeMethod = class_cache_->GetJMethod(
+          JavaClassCache::JM_FLINK_FS_INPUT_STREAM_CLOSE);
+      jniEnv->CallVoidMethod(fs_data_input_stream_instance_,
+                             closeMethod.javaMethod);
       jniEnv->DeleteGlobalRef(fs_data_input_stream_instance_);
     }
   }
@@ -305,8 +309,16 @@ class FlinkDirectory : public FSDirectory {
 };
 
 FlinkFileSystem::FlinkFileSystem(const std::shared_ptr<FileSystem>& base_fs,
-                                 const std::string& base_path)
-    : FileSystemWrapper(base_fs), base_path_(TrimTrailingSlash(base_path)) {}
+                                 const std::string& base_path,
+                                 jobject file_system_instance)
+    : FileSystemWrapper(base_fs), base_path_(TrimTrailingSlash(base_path)) {
+  if (file_system_instance != nullptr) {
+    JNIEnv* env = getJNIEnv();
+    file_system_instance_ = env->NewGlobalRef(file_system_instance);
+  } else {
+    file_system_instance_ = nullptr;
+  }
+}
 
 FlinkFileSystem::~FlinkFileSystem() {
   if (file_system_instance_ != nullptr) {
@@ -325,48 +337,60 @@ Status FlinkFileSystem::Init() {
   }
   class_cache_ = javaClassCache.release();
 
-  // Delegate Flink to load real FileSystem (e.g.
-  // S3FileSystem/OSSFileSystem/...)
-  JavaClassCache::JavaClassContext fileSystemClass =
-      class_cache_->GetJClass(JavaClassCache::JC_FLINK_FILE_SYSTEM);
-  JavaClassCache::JavaMethodContext fileSystemGetMethod =
-      class_cache_->GetJMethod(JavaClassCache::JM_FLINK_FILE_SYSTEM_GET);
+  if (file_system_instance_ == nullptr) {
+    // Delegate Flink to load real FileSystem (e.g.
+    // S3FileSystem/OSSFileSystem/...)
+    JavaClassCache::JavaClassContext fileSystemClass =
+        class_cache_->GetJClass(JavaClassCache::JC_FLINK_FILE_SYSTEM);
+    JavaClassCache::JavaMethodContext fileSystemGetMethod =
+        class_cache_->GetJMethod(JavaClassCache::JM_FLINK_FILE_SYSTEM_GET);
 
-  JavaClassCache::JavaClassContext uriClass =
-      class_cache_->GetJClass(JavaClassCache::JC_URI);
-  JavaClassCache::JavaMethodContext uriConstructor =
-      class_cache_->GetJMethod(JavaClassCache::JM_FLINK_URI_CONSTRUCTOR);
+    JavaClassCache::JavaClassContext uriClass =
+        class_cache_->GetJClass(JavaClassCache::JC_URI);
+    JavaClassCache::JavaMethodContext uriConstructor =
+        class_cache_->GetJMethod(JavaClassCache::JM_FLINK_URI_CONSTRUCTOR);
 
-  // Construct URI
-  jstring uriStringArg = jniEnv->NewStringUTF(base_path_.c_str());
-  jobject uriInstance = jniEnv->NewObject(
-      uriClass.javaClass, uriConstructor.javaMethod, uriStringArg);
-  jniEnv->DeleteLocalRef(uriStringArg);
-  if (uriInstance == nullptr) {
-    return CheckThenError(
-        std::string("NewObject Exception when Init FlinkFileSystem, ")
-            .append(uriClass.ToString())
-            .append(uriConstructor.ToString())
-            .append(", args: ")
-            .append(base_path_));
+    // Construct URI
+    jstring uriStringArg = jniEnv->NewStringUTF(base_path_.c_str());
+    jobject uriInstance = jniEnv->NewObject(
+        uriClass.javaClass, uriConstructor.javaMethod, uriStringArg);
+    jniEnv->DeleteLocalRef(uriStringArg);
+    if (uriInstance == nullptr) {
+      return CheckThenError(
+          std::string("NewObject Exception when Init FlinkFileSystem, ")
+              .append(uriClass.ToString())
+              .append(uriConstructor.ToString())
+              .append(", args: ")
+              .append(base_path_));
+    }
+
+    // Construct FileSystem
+    jobject fileSystemInstance = jniEnv->CallStaticObjectMethod(
+        fileSystemClass.javaClass, fileSystemGetMethod.javaMethod, uriInstance);
+    jniEnv->DeleteLocalRef(uriInstance);
+    if (fileSystemInstance == nullptr || jniEnv->ExceptionCheck()) {
+      return CheckThenError(
+          std::string(
+              "CallStaticObjectMethod Exception when Init FlinkFileSystem, ")
+              .append(fileSystemClass.ToString())
+              .append(fileSystemGetMethod.ToString())
+              .append(", args: URI(")
+              .append(base_path_)
+              .append(")"));
+    }
+    file_system_instance_ = jniEnv->NewGlobalRef(fileSystemInstance);
+    jniEnv->DeleteLocalRef(fileSystemInstance);
   }
 
-  // Construct FileSystem
-  jobject fileSystemInstance = jniEnv->CallStaticObjectMethod(
-      fileSystemClass.javaClass, fileSystemGetMethod.javaMethod, uriInstance);
-  jniEnv->DeleteLocalRef(uriInstance);
-  if (fileSystemInstance == nullptr || jniEnv->ExceptionCheck()) {
-    return CheckThenError(
-        std::string(
-            "CallStaticObjectMethod Exception when Init FlinkFileSystem, ")
-            .append(fileSystemClass.ToString())
-            .append(fileSystemGetMethod.ToString())
-            .append(", args: URI(")
-            .append(base_path_)
-            .append(")"));
+  if (file_system_instance_ == nullptr) {
+    return CheckThenError(std::string(
+        "Error when init flink env, the file system provided is null"));
   }
-  file_system_instance_ = jniEnv->NewGlobalRef(fileSystemInstance);
-  jniEnv->DeleteLocalRef(fileSystemInstance);
+
+  if (jniEnv->ExceptionCheck()) {
+    return CheckThenError(
+        std::string("Error when init flink env, JNI throws exception."));
+  }
   return Status::OK();
 }
 
@@ -856,17 +880,19 @@ IOStatus FlinkFileSystem::UnlockFile(FileLock* /*lock*/,
 
 Status FlinkFileSystem::Create(const std::shared_ptr<FileSystem>& base,
                                const std::string& uri,
-                               std::unique_ptr<FileSystem>* result) {
-  auto* fileSystem = new FlinkFileSystem(base, uri);
+                               std::unique_ptr<FileSystem>* result,
+                               jobject file_system_instance) {
+  auto* fileSystem = new FlinkFileSystem(base, uri, file_system_instance);
   Status status = fileSystem->Init();
   result->reset(fileSystem);
   return status;
 }
 
 Status NewFlinkEnv(const std::string& uri,
-                   std::unique_ptr<Env>* flinkFileSystem) {
+                   std::unique_ptr<Env>* flinkFileSystem,
+                   jobject file_system_instance) {
   std::shared_ptr<FileSystem> fs;
-  Status s = NewFlinkFileSystem(uri, &fs);
+  Status s = NewFlinkFileSystem(uri, &fs, file_system_instance);
   if (s.ok()) {
     *flinkFileSystem = NewCompositeEnv(fs);
   }
@@ -874,10 +900,11 @@ Status NewFlinkEnv(const std::string& uri,
 }
 
 Status NewFlinkFileSystem(const std::string& uri,
-                          std::shared_ptr<FileSystem>* fs) {
+                          std::shared_ptr<FileSystem>* fs,
+                          jobject file_system_instance) {
   std::unique_ptr<FileSystem> flinkFileSystem;
-  Status s =
-      FlinkFileSystem::Create(FileSystem::Default(), uri, &flinkFileSystem);
+  Status s = FlinkFileSystem::Create(FileSystem::Default(), uri,
+                                     &flinkFileSystem, file_system_instance);
   if (s.ok()) {
     fs->reset(flinkFileSystem.release());
   }

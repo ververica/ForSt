@@ -52,7 +52,8 @@ void EnvFlinkTestSuites::runAllTestSuites() {
 }
 
 void EnvFlinkTestSuites::setUp() {
-  auto status = ROCKSDB_NAMESPACE::NewFlinkEnv(base_path_, &flink_env_);
+  auto status =
+      ROCKSDB_NAMESPACE::NewFlinkEnv(base_path_, &flink_env_, nullptr);
   if (!status.ok()) {
     throw std::runtime_error("New FlinkEnv failed");
   }

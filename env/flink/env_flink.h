@@ -34,7 +34,8 @@ class FlinkFileSystem : public FileSystemWrapper {
   // base_path
   static Status Create(const std::shared_ptr<FileSystem>& /*base_fs*/,
                        const std::string& /*base_path*/,
-                       std::unique_ptr<FileSystem>* /*fs*/);
+                       std::unique_ptr<FileSystem>* /*fs*/,
+                       jobject file_system_instance);
 
   // Define some names
   static const char* kClassName() { return "FlinkFileSystem"; }
@@ -103,7 +104,8 @@ class FlinkFileSystem : public FileSystemWrapper {
   jobject file_system_instance_;
 
   explicit FlinkFileSystem(const std::shared_ptr<FileSystem>& base,
-                           const std::string& fsname);
+                           const std::string& fsname,
+                           jobject file_system_instance);
 
   // Init FileSystem
   Status Init();
@@ -126,8 +128,10 @@ class FlinkFileSystem : public FileSystemWrapper {
 };
 
 // Returns a `FlinkEnv` with base_path
-Status NewFlinkEnv(const std::string& base_path, std::unique_ptr<Env>* env);
+Status NewFlinkEnv(const std::string& base_path, std::unique_ptr<Env>* env,
+                   jobject file_system_instance);
 // Returns a `FlinkFileSystem` with base_path
 Status NewFlinkFileSystem(const std::string& base_path,
-                          std::shared_ptr<FileSystem>* fs);
+                          std::shared_ptr<FileSystem>* fs,
+                          jobject file_system_instance);
 }  // namespace ROCKSDB_NAMESPACE
