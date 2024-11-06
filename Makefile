@@ -6,7 +6,7 @@
 
 #-----------------------------------------------
 
-FORST_VERSION ?= 0.1.2-beta
+FORST_VERSION ?= 0.1.3-beta
 
 BASH_EXISTS := $(shell which bash)
 SHELL := $(shell which bash)
