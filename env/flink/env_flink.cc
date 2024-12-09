@@ -878,6 +878,69 @@ IOStatus FlinkFileSystem::UnlockFile(FileLock* /*lock*/,
   return IOStatus::OK();
 }
 
+IOStatus FlinkFileSystem::LinkFile(const std::string& src,
+                                   const std::string& target,
+                                   const IOOptions& options,
+                                   IODebugContext* dbg) {
+  IOStatus status = FileExists(src, options, dbg);
+  if (!status.ok()) {
+    return status.IsNotFound()
+               ? IOStatus::PathNotFound(
+                     std::string(
+                         "Could not find src path when linkFile, path: ")
+                         .append(ConstructPath(src)))
+               : status;
+  }
+
+  JNIEnv* jniEnv = getJNIEnv();
+
+  std::string srcFilePath = ConstructPath(src);
+  // Construct src Path Instance
+  jobject srcPathInstance;
+  status = class_cache_->ConstructPathInstance(srcFilePath, &srcPathInstance);
+  if (!status.ok()) {
+    return status;
+  }
+
+  std::string targetFilePath = ConstructPath(target);
+  // Construct target Path Instance
+  jobject targetPathInstance;
+  status =
+      class_cache_->ConstructPathInstance(targetFilePath, &targetPathInstance);
+  if (!status.ok()) {
+    jniEnv->DeleteLocalRef(srcPathInstance);
+    return status;
+  }
+
+  JavaClassCache::JavaMethodContext linkMethod =
+      class_cache_->GetJMethod(JavaClassCache::JM_FLINK_FILE_SYSTEM_LINK_FILE);
+  jint linked =
+      jniEnv->CallIntMethod(file_system_instance_, linkMethod.javaMethod,
+                            srcPathInstance, targetPathInstance);
+  jniEnv->DeleteLocalRef(srcPathInstance);
+  jniEnv->DeleteLocalRef(targetPathInstance);
+
+  status = CurrentStatus([srcFilePath, targetFilePath]() {
+    return std::string("Exception when LinkFile, src: ")
+        .append(srcFilePath)
+        .append(", target: ")
+        .append(targetFilePath);
+  });
+  if (!status.ok()) {
+    return status;
+  }
+
+  if (linked == -1) {
+    return IOStatus::NotSupported();
+  } else if (linked > 0) {
+    return IOStatus::IOError(std::string("Exception when LinkFile, src: ")
+                                 .append(srcFilePath)
+                                 .append(", target: ")
+                                 .append(targetFilePath));
+  }
+  return IOStatus::OK();
+}
+
 Status FlinkFileSystem::Create(const std::shared_ptr<FileSystem>& base,
                                const std::string& uri,
                                std::unique_ptr<FileSystem>* result,

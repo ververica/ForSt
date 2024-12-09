@@ -98,6 +98,10 @@ class FlinkFileSystem : public FileSystemWrapper {
                        const IOOptions& /*options*/, bool* /*is_dir*/,
                        IODebugContext* /*dbg*/) override;
 
+  IOStatus LinkFile(const std::string& /*src*/, const std::string& /*target*/,
+                    const IOOptions& /*options*/,
+                    IODebugContext* /*dbg*/) override;
+
  private:
   const std::string base_path_;
   JavaClassCache* class_cache_;

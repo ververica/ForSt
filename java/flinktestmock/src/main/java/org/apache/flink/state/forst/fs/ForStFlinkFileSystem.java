@@ -119,6 +119,11 @@ public class ForStFlinkFileSystem extends FileSystem {
     return flinkFS.rename(src, dst);
   }
 
+  public int link(Path src, Path dst) throws IOException {
+    // let forstdb copy the file
+    return -1;
+  }
+
   @Override
   public boolean isDistributedFS() {
     return flinkFS.isDistributedFS();

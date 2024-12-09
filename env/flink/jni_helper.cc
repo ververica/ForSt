@@ -151,6 +151,14 @@ IOStatus JavaClassCache::Init() {
       .signature =
       "(Lorg/apache/flink/core/fs/Path;Lorg/apache/flink/core/fs/Path;)Z";
 
+  cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_LINK_FILE]
+      .javaClassAndName = cached_java_classes_[JC_FLINK_FILE_SYSTEM];
+  cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_LINK_FILE]
+      .methodName = "link";
+  cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_LINK_FILE]
+      .signature =
+      "(Lorg/apache/flink/core/fs/Path;Lorg/apache/flink/core/fs/Path;)I";
+
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_OPEN]
       .javaClassAndName = cached_java_classes_[JC_FLINK_FILE_SYSTEM];
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_OPEN].methodName =
