@@ -36,7 +36,7 @@ public class ForStFlinkFileSystem extends FileSystem {
     this.flinkFS = flinkFS;
   }
 
-  public static FileSystem get(URI uri) throws IOException {
+  public static ForStFlinkFileSystem get(URI uri) throws IOException {
     return new ForStFlinkFileSystem(FileSystem.get(uri));
   }
 

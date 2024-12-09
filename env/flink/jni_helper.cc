@@ -48,17 +48,14 @@ IOStatus JavaClassCache::Create(JNIEnv* env,
 
 IOStatus JavaClassCache::Init() {
   // Set all class names
-  cached_java_classes_[CachedJavaClass::JC_URI].className = "java/net/URI";
   cached_java_classes_[CachedJavaClass::JC_BYTE_BUFFER].className =
       "java/nio/ByteBuffer";
   cached_java_classes_[CachedJavaClass::JC_THROWABLE].className =
       "java/lang/Throwable";
-  cached_java_classes_[CachedJavaClass::JC_FLINK_PATH].className =
-      "org/apache/flink/core/fs/Path";
   cached_java_classes_[CachedJavaClass::JC_FLINK_FILE_SYSTEM].className =
-      "org/apache/flink/state/forst/fs/ForStFlinkFileSystem";
+      "org/apache/flink/state/forst/fs/StringifiedForStFileSystem";
   cached_java_classes_[CachedJavaClass::JC_FLINK_FILE_STATUS].className =
-      "org/apache/flink/core/fs/FileStatus";
+      "org/apache/flink/state/forst/fs/ForStFileStatus";
   cached_java_classes_[CachedJavaClass::JC_FLINK_FS_INPUT_STREAM].className =
       "org/apache/flink/state/forst/fs/ByteBufferReadableFSDataInputStream";
   cached_java_classes_[CachedJavaClass::JC_FLINK_FS_OUTPUT_STREAM].className =
@@ -76,33 +73,13 @@ IOStatus JavaClassCache::Init() {
   }
 
   // Set all method names, signatures and class infos
-  cached_java_methods_[CachedJavaMethod::JM_FLINK_PATH_CONSTRUCTOR]
-      .javaClassAndName = cached_java_classes_[JC_FLINK_PATH];
-  cached_java_methods_[CachedJavaMethod::JM_FLINK_PATH_CONSTRUCTOR].methodName =
-      "<init>";
-  cached_java_methods_[CachedJavaMethod::JM_FLINK_PATH_CONSTRUCTOR].signature =
-      "(Ljava/lang/String;)V";
-
-  cached_java_methods_[CachedJavaMethod::JM_FLINK_PATH_TO_STRING]
-      .javaClassAndName = cached_java_classes_[JC_FLINK_PATH];
-  cached_java_methods_[CachedJavaMethod::JM_FLINK_PATH_TO_STRING].methodName =
-      "toString";
-  cached_java_methods_[CachedJavaMethod::JM_FLINK_PATH_TO_STRING].signature =
-      "()Ljava/lang/String;";
-
-  cached_java_methods_[CachedJavaMethod::JM_FLINK_URI_CONSTRUCTOR]
-      .javaClassAndName = cached_java_classes_[JC_URI];
-  cached_java_methods_[CachedJavaMethod::JM_FLINK_URI_CONSTRUCTOR].methodName =
-      "<init>";
-  cached_java_methods_[CachedJavaMethod::JM_FLINK_URI_CONSTRUCTOR].signature =
-      "(Ljava/lang/String;)V";
-
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_GET]
       .javaClassAndName = cached_java_classes_[JC_FLINK_FILE_SYSTEM];
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_GET].methodName =
       "get";
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_GET].signature =
-      "(Ljava/net/URI;)Lorg/apache/flink/core/fs/FileSystem;";
+      "(Ljava/lang/String;)Lorg/apache/flink/state/forst/fs/"
+      "StringifiedForStFileSystem;";
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_GET].isStatic =
       true;
 
@@ -111,7 +88,7 @@ IOStatus JavaClassCache::Init() {
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_EXISTS]
       .methodName = "exists";
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_EXISTS]
-      .signature = "(Lorg/apache/flink/core/fs/Path;)Z";
+      .signature = "(Ljava/lang/String;)Z";
 
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_LIST_STATUS]
       .javaClassAndName = cached_java_classes_[JC_FLINK_FILE_SYSTEM];
@@ -119,7 +96,7 @@ IOStatus JavaClassCache::Init() {
       .methodName = "listStatus";
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_LIST_STATUS]
       .signature =
-      "(Lorg/apache/flink/core/fs/Path;)[Lorg/apache/flink/core/fs/FileStatus;";
+      "(Ljava/lang/String;)[Lorg/apache/flink/state/forst/fs/ForStFileStatus;";
 
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_GET_FILE_STATUS]
       .javaClassAndName = cached_java_classes_[JC_FLINK_FILE_SYSTEM];
@@ -127,44 +104,42 @@ IOStatus JavaClassCache::Init() {
       .methodName = "getFileStatus";
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_GET_FILE_STATUS]
       .signature =
-      "(Lorg/apache/flink/core/fs/Path;)Lorg/apache/flink/core/fs/FileStatus;";
+      "(Ljava/lang/String;)Lorg/apache/flink/state/forst/fs/ForStFileStatus;";
 
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_DELETE]
       .javaClassAndName = cached_java_classes_[JC_FLINK_FILE_SYSTEM];
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_DELETE]
       .methodName = "delete";
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_DELETE]
-      .signature = "(Lorg/apache/flink/core/fs/Path;Z)Z";
+      .signature = "(Ljava/lang/String;Z)Z";
 
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_MKDIR]
       .javaClassAndName = cached_java_classes_[JC_FLINK_FILE_SYSTEM];
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_MKDIR]
       .methodName = "mkdirs";
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_MKDIR].signature =
-      "(Lorg/apache/flink/core/fs/Path;)Z";
+      "(Ljava/lang/String;)Z";
 
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_RENAME_FILE]
       .javaClassAndName = cached_java_classes_[JC_FLINK_FILE_SYSTEM];
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_RENAME_FILE]
       .methodName = "rename";
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_RENAME_FILE]
-      .signature =
-      "(Lorg/apache/flink/core/fs/Path;Lorg/apache/flink/core/fs/Path;)Z";
+      .signature = "(Ljava/lang/String;Ljava/lang/String;)Z";
 
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_LINK_FILE]
       .javaClassAndName = cached_java_classes_[JC_FLINK_FILE_SYSTEM];
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_LINK_FILE]
       .methodName = "link";
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_LINK_FILE]
-      .signature =
-      "(Lorg/apache/flink/core/fs/Path;Lorg/apache/flink/core/fs/Path;)I";
+      .signature = "(Ljava/lang/String;Ljava/lang/String;)I";
 
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_OPEN]
       .javaClassAndName = cached_java_classes_[JC_FLINK_FILE_SYSTEM];
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_OPEN].methodName =
       "open";
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_OPEN].signature =
-      "(Lorg/apache/flink/core/fs/Path;)Lorg/apache/flink/state/forst/fs/"
+      "(Ljava/lang/String;)Lorg/apache/flink/state/forst/fs/"
       "ByteBufferReadableFSDataInputStream;";
 
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FS_INPUT_STREAM_SEQ_READ]
@@ -229,7 +204,7 @@ IOStatus JavaClassCache::Init() {
       .methodName = "create";
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_SYSTEM_CREATE]
       .signature =
-      "(Lorg/apache/flink/core/fs/Path;)Lorg/apache/flink/state/forst/fs/"
+      "(Ljava/lang/String;)Lorg/apache/flink/state/forst/fs/"
       "ByteBufferWritableFSDataOutputStream;";
 
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_STATUS_GET_PATH]
@@ -237,7 +212,7 @@ IOStatus JavaClassCache::Init() {
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_STATUS_GET_PATH]
       .methodName = "getPath";
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_STATUS_GET_PATH]
-      .signature = "()Lorg/apache/flink/core/fs/Path;";
+      .signature = "()Ljava/lang/String;";
 
   cached_java_methods_[CachedJavaMethod::JM_FLINK_FILE_STATUS_GET_LEN]
       .javaClassAndName = cached_java_classes_[JC_FLINK_FILE_STATUS];
@@ -313,29 +288,6 @@ JavaClassCache::JavaClassContext JavaClassCache::GetJClass(
 JavaClassCache::JavaMethodContext JavaClassCache::GetJMethod(
     CachedJavaMethod cachedJavaMethod) {
   return cached_java_methods_[cachedJavaMethod];
-}
-
-IOStatus JavaClassCache::ConstructPathInstance(const std::string& file_path,
-                                               jobject* pathInstance) {
-  JNIEnv* jniEnv = getJNIEnv();
-  JavaClassCache::JavaClassContext pathClass =
-      GetJClass(JavaClassCache::JC_FLINK_PATH);
-  JavaClassCache::JavaMethodContext pathConstructor =
-      GetJMethod(JavaClassCache::JM_FLINK_PATH_CONSTRUCTOR);
-  jstring pathString = jniEnv->NewStringUTF(file_path.c_str());
-  jobject tempPathInstance = jniEnv->NewObject(
-      pathClass.javaClass, pathConstructor.javaMethod, pathString);
-  jniEnv->DeleteLocalRef(pathString);
-  if (tempPathInstance == nullptr) {
-    return CheckThenError(std::string("Exception when ConstructPathInstance, ")
-                              .append(pathClass.ToString())
-                              .append(pathConstructor.ToString())
-                              .append(", args: Path(")
-                              .append(file_path)
-                              .append(")"));
-  }
-  *pathInstance = tempPathInstance;
-  return IOStatus::OK();
 }
 
 IOStatus CurrentStatus(

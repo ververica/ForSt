@@ -29,10 +29,8 @@ class JavaClassCache {
  public:
   // Frequently-used class type representing jclasses which will be cached.
   typedef enum {
-    JC_URI,
     JC_BYTE_BUFFER,
     JC_THROWABLE,
-    JC_FLINK_PATH,
     JC_FLINK_FILE_SYSTEM,
     JC_FLINK_FILE_STATUS,
     JC_FLINK_FS_INPUT_STREAM,
@@ -42,9 +40,6 @@ class JavaClassCache {
 
   // Frequently-used method type representing jmethods which will be cached.
   typedef enum {
-    JM_FLINK_PATH_CONSTRUCTOR,
-    JM_FLINK_PATH_TO_STRING,
-    JM_FLINK_URI_CONSTRUCTOR,
     JM_FLINK_FILE_SYSTEM_GET,
     JM_FLINK_FILE_SYSTEM_EXISTS,
     JM_FLINK_FILE_SYSTEM_LIST_STATUS,
@@ -112,11 +107,6 @@ class JavaClassCache {
 
   // Get JavaMethodContext by specific CachedJavaMethod.
   JavaMethodContext GetJMethod(CachedJavaMethod cachedJavaMethod);
-
-  // Construct Java Path Instance based on cached classes and method related to
-  // Path.
-  IOStatus ConstructPathInstance(const std::string& /*file_path*/,
-                                 jobject* /*pathInstance*/);
 
  private:
   JNIEnv* jni_env_;
