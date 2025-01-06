@@ -19,6 +19,7 @@
 #include "env_flink.h"
 
 #include "jvm_util.h"
+#include "logging/env_logger.h"
 
 //
 // This file defines a Flink environment for ForSt. It uses the JNI call
@@ -845,6 +846,25 @@ IOStatus FlinkFileSystem::LinkFile(const std::string& src,
                                  .append(", target: ")
                                  .append(targetFilePath));
   }
+  return IOStatus::OK();
+}
+
+IOStatus FlinkFileSystem::NewLogger(const std::string& fname,
+                                    const IOOptions& io_opts,
+                                    std::shared_ptr<Logger>* result,
+                                    IODebugContext* dbg) {
+  FileOptions options;
+  options.io_options = io_opts;
+  // TODO: Tune the buffer size.
+  options.writable_file_max_buffer_size = 1024 * 1024;
+  std::unique_ptr<FSWritableFile> writable_file;
+  const IOStatus status = NewWritableFile(fname, options, &writable_file, dbg);
+  if (!status.ok()) {
+    return status;
+  }
+
+  *result = std::make_shared<EnvLogger>(std::move(writable_file), fname,
+                                        options, Env::Default());
   return IOStatus::OK();
 }
 
