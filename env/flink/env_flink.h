@@ -102,6 +102,10 @@ class FlinkFileSystem : public FileSystemWrapper {
                     const IOOptions& /*options*/,
                     IODebugContext* /*dbg*/) override;
 
+  IOStatus NewLogger(const std::string& fname, const IOOptions& io_opts,
+                     std::shared_ptr<Logger>* result,
+                     IODebugContext* dbg) override;
+
  private:
   const std::string base_path_;
   JavaClassCache* class_cache_;
