@@ -261,6 +261,7 @@ public class RocksDB extends RocksObject {
     final RocksDB db = new RocksDB(open(options.nativeHandle_, path));
     db.storeOptionsInstance(options);
     db.storeDefaultColumnFamilyHandle(db.makeDefaultColumnFamilyHandle());
+    RocksDBShutdownHook.register();
     return db;
   }
 
@@ -327,6 +328,8 @@ public class RocksDB extends RocksObject {
 
     db.ownedColumnFamilyHandles.addAll(columnFamilyHandles);
     db.storeDefaultColumnFamilyHandle(db.makeDefaultColumnFamilyHandle());
+
+    RocksDBShutdownHook.register();
 
     return db;
   }
@@ -402,6 +405,7 @@ public class RocksDB extends RocksObject {
     final RocksDB db = new RocksDB(openROnly(options.nativeHandle_, path, errorIfWalFileExists));
     db.storeOptionsInstance(options);
     db.storeDefaultColumnFamilyHandle(db.makeDefaultColumnFamilyHandle());
+    RocksDBShutdownHook.register();
     return db;
   }
 
@@ -514,6 +518,8 @@ public class RocksDB extends RocksObject {
     db.ownedColumnFamilyHandles.addAll(columnFamilyHandles);
     db.storeDefaultColumnFamilyHandle(db.makeDefaultColumnFamilyHandle());
 
+    RocksDBShutdownHook.register();
+
     return db;
   }
 
@@ -551,6 +557,7 @@ public class RocksDB extends RocksObject {
     final RocksDB db = new RocksDB(openAsSecondary(options.nativeHandle_, path, secondaryPath));
     db.storeOptionsInstance(options);
     db.storeDefaultColumnFamilyHandle(db.makeDefaultColumnFamilyHandle());
+    RocksDBShutdownHook.register();
     return db;
   }
 
@@ -612,6 +619,8 @@ public class RocksDB extends RocksObject {
 
     db.ownedColumnFamilyHandles.addAll(columnFamilyHandles);
     db.storeDefaultColumnFamilyHandle(db.makeDefaultColumnFamilyHandle());
+
+    RocksDBShutdownHook.register();
 
     return db;
   }
