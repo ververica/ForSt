@@ -35,6 +35,7 @@ class FlinkWritableFile : public FSWritableFile {
   const jobject file_system_instance_;
   jobject fs_data_output_stream_instance_;
   JavaClassCache* class_cache_;
+  bool closed_;
 
  public:
   FlinkWritableFile(jobject file_system_instance,
@@ -43,11 +44,13 @@ class FlinkWritableFile : public FSWritableFile {
       : FSWritableFile(options),
         file_path_(file_path),
         file_system_instance_(file_system_instance),
-        class_cache_(java_class_cache) {}
+        class_cache_(java_class_cache),
+        closed_(false) {}
 
   ~FlinkWritableFile() override {
     JNIEnv* jniEnv = getJNIEnv();
     if (fs_data_output_stream_instance_ != nullptr) {
+      InnerClose();
       jniEnv->DeleteGlobalRef(fs_data_output_stream_instance_);
     }
   }
@@ -135,6 +138,14 @@ class FlinkWritableFile : public FSWritableFile {
 
   IOStatus Close(const IOOptions& /*options*/,
                  IODebugContext* /*dbg*/) override {
+    return InnerClose();
+  }
+
+  IOStatus InnerClose() {
+    if (closed_) {
+      return IOStatus::OK();
+    }
+    closed_ = true;
     JavaClassCache::JavaMethodContext closeMethod = class_cache_->GetJMethod(
         JavaClassCache::JM_FLINK_FS_OUTPUT_STREAM_CLOSE);
     JNIEnv* jniEnv = getJNIEnv();
