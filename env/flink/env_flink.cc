@@ -44,6 +44,7 @@ class FlinkWritableFile : public FSWritableFile {
       : FSWritableFile(options),
         file_path_(file_path),
         file_system_instance_(file_system_instance),
+        fs_data_output_stream_instance_(nullptr),
         class_cache_(java_class_cache),
         closed_(false) {}
 
@@ -175,6 +176,7 @@ class FlinkReadableFile : virtual public FSSequentialFile,
                     const std::string& file_path)
       : file_path_(file_path),
         file_system_instance_(file_system_instance),
+        fs_data_input_stream_instance_(nullptr),
         class_cache_(java_class_cache) {}
 
   ~FlinkReadableFile() override {
