@@ -112,7 +112,7 @@ jobs:
 
   # ========================= MacOS build only ======================== #
   build-macos:
-    runs-on: macos-13
+    runs-on: macos-15
     timeout-minutes: 120
     env:
       ROCKSDB_DISABLE_JEMALLOC: 1
@@ -129,7 +129,7 @@ jobs:
       - uses: "./.github/actions/post-steps"
   # ========================= MacOS with java ======================== #
   build-macos-java:
-    runs-on: macos-13
+    runs-on: macos-15
     env:
       JAVA_HOME: "/Library/Java/JavaVirtualMachines/liberica-jdk-8.jdk/Contents/Home"
       ROCKSDB_DISABLE_JEMALLOC: 1
@@ -151,7 +151,7 @@ jobs:
         run: DISABLE_WARNING_AS_ERROR=1 DISABLE_PERF_CONTEXT=0 make V=1 J=16 -j16 jtest
       - uses: "./.github/actions/post-steps"
   build-macos-java-static:
-    runs-on: macos-13
+    runs-on: macos-15
     env:
       JAVA_HOME: "/Library/Java/JavaVirtualMachines/liberica-jdk-8.jdk/Contents/Home"
     steps:
