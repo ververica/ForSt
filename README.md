@@ -1,6 +1,6 @@
 ## ForSt: A Persistent Key-Value Store designed for Streaming processing
 
-ForSt is developed and maintained by Flink community and hosted by ververica.
+ForSt is hosted by Ververica.
 It is built on top of [RocksDB](https://github.com/facebook/rocksdb) by facebook.
 
 This code is a library that forms the core building block for a fast
