@@ -1,7 +1,6 @@
 ## ForSt: A Persistent Key-Value Store designed for Streaming processing
 
-ForSt is currently hosted by Ververica.
-It is built on top of [RocksDB](https://github.com/facebook/rocksdb) by facebook.
+ForSt is built on top of [RocksDB](https://github.com/facebook/rocksdb) by facebook.
 
 This code is a library that forms the core building block for a fast
 key-value server, especially suited for storing data on flash drives.
